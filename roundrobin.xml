@@ -39,10 +39,10 @@
             <tag>Helpdesk</tag>
             <tag>Technician</tag>
         </en>
-        <lang>
+        <it>
             <tag>Chiamata</tag>
             <tag>Assistenza</tag>
             <tag>Tecnico</tag>
-        </lang>
+        </it>
     </tags>
 </root>
