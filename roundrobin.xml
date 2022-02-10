@@ -17,7 +17,7 @@
     <homepage>https://github.com/initiativa/roundrobin</homepage>
     <download>https://github.com/initiativa/roundrobin/releases</download>
     <issues>https://github.com/initiativa/roundrobin/issues</issues>
-    <readme>https://github.com/initiativa/roundrobin/blob/main/README.md</readme>
+    <readme>https://raw.githubusercontent.com/initiativa/roundrobin/master/README.md</readme>
     <authors>
         <author>Andrea Caracciolo / initiativa srl</author>
     </authors>
