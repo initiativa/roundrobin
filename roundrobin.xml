@@ -2,8 +2,8 @@
 <root>
     <name>RoundRobin</name>
     <key>roundrobin</key>
-    <state>stable</state> <!-- stable | unstable | beta | alpha -->
-    <logo>https://github.com/initiativa/roundrobin/blob/1.0.0/pics/roundrobin-logo.png</logo>
+    <state>stable</state>
+    <logo>https://raw.githubusercontent.com/initiativa/roundrobin/master/pics/roundrobin-logo.png</logo>
     <description>
         <short>
             <en>This plugin allow the assignation of a ticket using a roundrobin policy. It considers "the group in charge of the hardware" linked to a category to get the member of the group and assigning a ticket to one of them using a roundrobin policy. </en>
