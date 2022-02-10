@@ -6,8 +6,8 @@
     <logo>https://raw.githubusercontent.com/initiativa/roundrobin/master/pics/roundrobin-logo.png</logo>
     <description>
         <short>
-            <en>![CDATA[This plugin allow the assignation of a ticket using a roundrobin policy. It considers "the group in charge of the hardware" linked to a category to get the member of the group and assigning a ticket to one of them using a roundrobin policy.]]</en>
-            <it>![CDATA[Questo plugin permette l'assegnazione di un ticket ad un tecnico utilizzando una politica di roundrobin. Il plugin valuta il gruppo indicato nel campo "gruppo incaricato dell'hardware" nelle varie categorie, ed assegna il ticket ad uno dei membri del gruppo, ruotnado i membri ad goni nuovo ticket con una politica di tipo roundrobin]]</it>
+            <en>![CDATA[This plugin allow the assignation of a ticket using a roundrobin policy.]]</en>
+            <it>![CDATA[Questo plugin permette l'assegnazione di un ticket ad un tecnico utilizzando una politica di roundrobin.]]</it>
         </short>
         <long>
             <en>![CDATA[This plugin allow the assignation of a ticket using a roundrobin policy. It considers "the group in charge of the hardware" linked to a category to get the member of the group and assigning a ticket to one of them using a roundrobin policy.]]</en>
