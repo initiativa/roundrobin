@@ -36,8 +36,10 @@ class PluginRoundRobinConfig {
     public static $PLUGIN_ROUNDROBIN_AUTHOR = '<a href="https://www.initiativa.it/glpi.php" target="_blank">initiativa s.r.l.</a>';
     public static $PLUGIN_ROUNDROBIN_LICENSE = 'GPLv3';
     public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://www.initiativa.it/glpi.php';
-    public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '9.5.5';
-    public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION_ERROR = 'This plugin requires GLPI = 9.5.5';
+    public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '9.5.2';
+    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "This plugin requires GLPI >= 9.5.2 and GLPI <= 9.5.7";
+    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '9.5.7';
+    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION_ERROR = 'This plugin requires ';
     public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '7.3';
 
     public static function init() {
@@ -82,7 +84,8 @@ class PluginRoundRobinConfig {
             'homepage' => self::$PLUGIN_ROUNDROBIN_HOME_PAGE,
             'requirements' => [
                 'glpi' => [
-                    'min' => self::$PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION
+                    'min' => self::$PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION,
+                    'max' => self::$PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION
                 ],
                 'php' => [
                     'min' => self::$PLUGIN_ROUNDROBIN_MIN_PHP_VERSION
