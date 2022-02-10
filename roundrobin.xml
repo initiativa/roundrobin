@@ -24,8 +24,8 @@
     <versions>
         <version>
             <num>1.0</num>
-            <compatibility>~9.5.0</compatibility>
-            <compatibility>~10.0</compatibility>
+            <compatibility>9.5.0</compatibility>
+            <compatibility>10.0</compatibility>
             <download_url>https://github.com/initiativa/roundrobin/releases/download/1.0.0/roundrobin-1.0.0.tar.gz</download_url>
         </version>
     </versions>
