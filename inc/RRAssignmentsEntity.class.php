@@ -152,9 +152,12 @@ EOT;
     }
 
     protected function insertAllItilCategory() {
-        $sqlCategory = <<< EOT
+        $sqlCategory_0 = <<< EOT
                 SELECT id FROM glpi_itilcategories
                 WHERE itilcategories_id = 0 AND groups_id <> 0
+EOT;
+        $sqlCategory = <<< EOT
+                SELECT id FROM glpi_itilcategories
 EOT;
         PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlCategory: ' . $sqlCategory);
         $itilCategoriesCollection = $this->DB->queryOrDie($sqlCategory, $this->DB->error());
@@ -281,7 +284,7 @@ EOT;
      * @return array of array (id, itilcategories_id, category_name, groups_id, group_name, num_group_members, is_active)
      */
     public function getAll() {
-        $sql = <<< EOT
+        $sql_0 = <<< EOT
                 SELECT 
                     a.id,
                     a.itilcategories_id,
@@ -300,6 +303,27 @@ EOT;
                         JOIN
                     glpi_itilcategories c ON c.id = a.itilcategories_id
                         JOIN
+                    glpi_groups g ON g.id = c.groups_id
+EOT;
+        $sql = <<< EOT
+                SELECT 
+                    a.id,
+                    a.itilcategories_id,
+                    c.completename AS category_name,
+                    c.groups_id,
+                    g.completename AS group_name,
+                    (SELECT 
+                            COUNT(id)
+                        FROM
+                            glpi_groups_users gu
+                        WHERE
+                            gu.groups_id = g.id) AS num_group_members,
+                    a.is_active
+                FROM
+                    glpi_plugin_roundrobin_rr_assignments a
+                        JOIN
+                    glpi_itilcategories c ON c.id = a.itilcategories_id
+                        LEFT JOIN
                     glpi_groups g ON g.id = c.groups_id
 EOT;
         PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sql: ' . $sql);

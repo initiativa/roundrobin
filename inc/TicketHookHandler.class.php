@@ -95,6 +95,12 @@ EOT;
             return;
         }
         $categoryGroupMembers = $this->getGroupsUsersByCategory($this->getTicketCategory($item));
+        if (count($categoryGroupMembers) === 0) {
+            /**
+             * category w/o group, or group w/o users
+             */
+            return;
+        }
         $newAssignmentIndex = isset($lastAssignmentIndex) ? $lastAssignmentIndex + 1 : 0;
         /**
          * round robin
