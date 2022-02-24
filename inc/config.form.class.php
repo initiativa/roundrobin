@@ -103,8 +103,8 @@ EOT;
             $id = $row['id'];
             $itilcategories_id = $row['itilcategories_id'];
             $category_name = $row['category_name'];
-            $group_name = $row['group_name'];
-            $num_group_members = $row['num_group_members'];
+            $group_name = isset($row['group_name']) ? $row['group_name'] : "<em>No group assigned</em>";
+            $num_group_members = isset($row['group_name']) ? $row['num_group_members'] : "<em>N/A</em>";
             $is_active = $row['is_active'];
 
             echo "<tr><td>$category_name</td><td>$group_name</td><td>$num_group_members</td>";
