@@ -133,7 +133,7 @@ EOT;
          */
         $sqlDelete_glpi_tickets_users = <<< EOT
             DELETE FROM glpi_tickets_users 
-            WHERE tickets_id = {$ticketId};
+            WHERE tickets_id = {$ticketId} AND type = 2;
 EOT;
         PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlDelete_glpi_tickets_users: ' . $sqlDelete_glpi_tickets_users);
         $this->DB->queryOrDie($sqlDelete_glpi_tickets_users, $this->DB->error());
