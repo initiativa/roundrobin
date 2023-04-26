@@ -37,7 +37,7 @@ class PluginRoundRobinConfig {
     public static $PLUGIN_ROUNDROBIN_LICENSE = 'GPLv3';
     public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://github.com/initiativa/roundrobin/';
     public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '9.5.5';
-    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "This plugin requires GLPI >= 9.5.2 and GLPI <= 10.0.0";
+    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "This plugin requires GLPI >= 9.5.2 and GLPI <= 10.1.0";
     public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '10.1.0';
     public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION_ERROR = 'This plugin requires ';
     public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '7.3';
