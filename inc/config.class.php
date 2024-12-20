@@ -33,20 +33,19 @@ class PluginRoundRobinConfig {
     public static $PLUGIN_ROUNDROBIN_VERSION = '1.0.3';
     public static $PLUGIN_ROUNDROBIN_AUTHOR = '<a href="https://www.linkedin.com/in/richard-ti/" target="_blank">Richard Loureiro</a>';
     public static $PLUGIN_ROUNDROBIN_LICENSE = 'GPLv3';
-    public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://www.initiativa.it/glpi.php';
+    public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://www.linkedin.com/in/richard-ti/';
     public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '9.5.2';
-    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "Este plugin requer GLPI >= 9.5.2 ou GLPI <= 10.0.17";
-    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '10.0.17';
-    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION_ERROR = 'Este plugin requer ';
+    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "Este plugin requer GLPI >= 9.5.2 e GLPI <= 10.0.17";
+    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '10.1.0';
     public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '7.3';
 
     public static function init() {
         PluginRoundRobinLogger::addWarning(__METHOD__ . ' - definindo manipuladores de hooks');
         global $PLUGIN_HOOKS;
+
         $PLUGIN_HOOKS['csrf_compliant'][self::$PLUGIN_ROUNDROBIN_CODE] = true;
-        /**
-         * declarações de hooks
-         */
+
+        // Declaração de hooks
         $PLUGIN_HOOKS['pre_item_add'][self::$PLUGIN_ROUNDROBIN_CODE] = [
             'Ticket' => 'plugin_roundrobin_hook_pre_item_add_handler'
         ];
@@ -54,15 +53,12 @@ class PluginRoundRobinConfig {
             'Ticket' => 'plugin_roundrobin_hook_item_add_handler',
             'ITILCategory' => 'plugin_roundrobin_hook_item_add_handler'
         ];
-
         $PLUGIN_HOOKS['item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
             'Ticket' => 'plugin_roundrobin_hook_item_update_handler'
         ];
-
         $PLUGIN_HOOKS['pre_item_delete'][self::$PLUGIN_ROUNDROBIN_CODE] = [
             'Ticket' => 'plugin_roundrobin_hook_pre_item_delete_handler'
         ];
-
         $PLUGIN_HOOKS['item_delete'][self::$PLUGIN_ROUNDROBIN_CODE] = [
             'Ticket' => 'plugin_roundrobin_hook_item_delete_handler',
             'ITILCategory' => 'plugin_roundrobin_hook_item_delete_handler'
@@ -95,21 +91,15 @@ class PluginRoundRobinConfig {
     public static function loadSources() {
         global $PLUGIN_HOOKS;
 
-        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - carregando recursos...');
-        /**
-         * adicionar seção de configuração
-         */
+        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - carregando fontes...');
         $PLUGIN_HOOKS['config_page'][self::$PLUGIN_ROUNDROBIN_CODE] = 'front/config.form.php';
     }
 
     public static function hookAddSource($uriArray, $hook, $sourceFile) {
         global $PLUGIN_HOOKS;
 
-        /**
-         * na página URI, carregue o código js ou estilos necessários
-         */
-        if (is_array($uriArray) === false) {
-            throw new Exception("estrutura de URI inválida, esperado array");
+        if (!is_array($uriArray)) {
+            throw new InvalidArgumentException("Estrutura de URI inválida, esperado array.");
         }
         foreach ($uriArray as $uri) {
             if (strpos(PluginRoundRobinRequest::getServerParam('REQUEST_URI'), $uri) !== false) {
