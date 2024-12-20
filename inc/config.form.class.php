@@ -7,24 +7,22 @@
  *
  * LICENÇA
  *
- * Este arquivo é parte do plugin RoundRobin GLPI.
+ * Este arquivo é parte do Plugin TicketBalance GLPI.
  *
- * RoundRobin é um software livre; você pode redistribuí-lo e/ou modificá-lo
+ * TicketBalance é um software livre; você pode redistribuí-lo e/ou modificá-lo
  * sob os termos da Licença Pública Geral GNU conforme publicada pela
- * Free Software Foundation; seja na versão 3 da Licença, ou (a seu critério) 
- * qualquer versão posterior.
+ * Free Software Foundation; seja na versão 3 da Licença, ou (a seu critério) qualquer versão posterior.
  *
- * RoundRobin é distribuído na esperança de que seja útil,
+ * TicketBalance é distribuído na esperança de que seja útil,
  * mas SEM QUALQUER GARANTIA; sem mesmo a garantia implícita de
- * COMERCIALIZAÇÃO ou ADEQUAÇÃO A UM PROPÓSITO PARTICULAR. Consulte
- * a Licença Pública Geral GNU para mais detalhes.
+ * COMERCIALIZAÇÃO ou ADEQUAÇÃO A UM PROPÓSITO PARTICULAR. Consulte a Licença Pública Geral GNU para mais detalhes.
  *
  * Você deve ter recebido uma cópia da Licença Pública Geral GNU
- * junto com o RoundRobin. Se não, veja <http://www.gnu.org/licenses/>.
+ * junto com o TicketBalance. Se não, veja <http://www.gnu.org/licenses/>
  * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2022 por iniciativa s.r.l. - http://www.initiativa.it
+ * @copyright Copyright (C) 2024 - https://www.linkedin.com/in/richard-ti/
  * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
- * @link      https://github.com/initiativa/roundrobin
+ * @link      https://github.com/RPGMais/ticketbalance
  * -------------------------------------------------------------------------
  */
 include ('../../../inc/includes.php');
