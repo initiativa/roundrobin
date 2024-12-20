@@ -70,7 +70,7 @@ EOT;
         echo "<form name='settingsForm' action='config.form.php' method='post' enctype='multipart/form-data'>";
         echo Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken()]);
         echo "<table class='tab_cadre_fixe'>";
-        echo "<tr><th colspan='4'>" . "Ativar atribuição de tickets Round Robin para cada ITILCategory" . "</th></tr>";
+        echo "<tr><th colspan='4'>" . "Ativar atribuição de tickets com balanceamento para cada ITILCategory" . "</th></tr>";
         echo "<tr><th colspan='4'>" . "<hr />" . "</th></tr>";
 
         /**
