@@ -1,6 +1,6 @@
-### Plugin Round Robin para GLPI - Atribuição Automática de Técnicos por Categoria Selecionada
+### Plugin Ticket Balance para GLPI - Atribuição Automática de Técnicos por Categoria Selecionada
 
-O **plugin Round Robin para GLPI** permite configurar uma política de atribuição automática para distribuir tickets de forma equilibrada entre técnicos pertencentes a um grupo específico. Ele distribui a carga de trabalho de maneira justa, assegurando que os tickets sejam atribuídos sequencialmente entre os membros do grupo.
+O **plugin Ticket Balance para GLPI** permite configurar uma política de atribuição automática para distribuir tickets de forma equilibrada entre técnicos pertencentes a um grupo específico. Ele distribui a carga de trabalho de maneira justa, assegurando que os tickets sejam atribuídos sequencialmente entre os membros do grupo.
 
 #### Funcionalidades Principais:
 1. **Definição de Categorias**:
