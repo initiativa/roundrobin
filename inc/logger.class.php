@@ -2,29 +2,27 @@
 
 /**
  * -------------------------------------------------------------------------
- * RoundRobin plugin for GLPI
+ * Plugin TicketBalance para GLPI
  * -------------------------------------------------------------------------
  *
- * LICENSE
+ * LICENÇA
  *
- * This file is part of RoundRobin GLPI Plugin.
+ * Este arquivo é parte do Plugin TicketBalance GLPI.
  *
- * RoundRobin is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
+ * TicketBalance é um software livre; você pode redistribuí-lo e/ou modificá-lo
+ * sob os termos da Licença Pública Geral GNU conforme publicada pela
+ * Free Software Foundation; seja na versão 3 da Licença, ou (a seu critério) qualquer versão posterior.
  *
- * RoundRobin is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * TicketBalance é distribuído na esperança de que seja útil,
+ * mas SEM QUALQUER GARANTIA; sem mesmo a garantia implícita de
+ * COMERCIALIZAÇÃO ou ADEQUAÇÃO A UM PROPÓSITO PARTICULAR. Consulte a Licença Pública Geral GNU para mais detalhes.
  *
- * You should have received a copy of the GNU General Public License
- * along with RoundRobin. If not, see <http://www.gnu.org/licenses/>.
+ * Você deve ter recebido uma cópia da Licença Pública Geral GNU
+ * junto com o TicketBalance. Se não, veja <http://www.gnu.org/licenses/>
  * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2022 by initiativa s.r.l. - http://www.initiativa.it
+ * @copyright Copyright (C) 2024 - https://www.linkedin.com/in/richard-ti/
  * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
- * @link      https://github.com/initiativa/roundrobin
+ * @link      https://github.com/RPGMais/ticketbalance
  * -------------------------------------------------------------------------
  */
 class PluginRoundRobinLogger {
