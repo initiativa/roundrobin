@@ -1,2 +1,2 @@
-# roundrobin
-GLPI - Automatic Round Robin Assignment in ticket by selected category
+# ticketbalance
+GLPI - Atribuição automática de tecnicos no ticket por categoria selecionada

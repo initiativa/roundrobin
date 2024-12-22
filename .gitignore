@@ -1,7 +1,32 @@
+# Arquivos específicos do Composer
 composer.phar
 /vendor/
 
-# Commit your application's lock file https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
-# You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
-# composer.lock
+# É recomendado versionar o arquivo composer.lock da sua aplicação
+# para garantir consistência nas dependências
+# https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
+composer.lock
+
+# Arquivos de lock de bibliotecas podem ser ignorados
+# https://getcomposer.org/doc/02-libraries.md#lock-file
+
+# Arquivos do NetBeans
 /nbproject/
+
+# Arquivos comuns de IDEs e editores
+.idea/           # PhpStorm
+*.iml            # IntelliJ IDEA
+.vscode/         # Visual Studio Code
+
+# Logs e arquivos temporários do sistema
+*.log
+*.cache
+*.bak
+*.tmp
+
+# Arquivos de configuração e variáveis de ambiente sensíveis
+.env
+.env.*.local
+
+# Dependências do Node.js (caso o projeto use npm ou Yarn para frontend)
+/node_modules/
