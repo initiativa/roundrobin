@@ -5,13 +5,13 @@ class TicketBalanceConfigClass {
     public static $PLUGIN_TICKETBALANCE_ENV = 'desenvolvimento';
     public static $PLUGIN_TICKETBALANCE_NAME = 'Ticket Balance';
     public static $PLUGIN_TICKETBALANCE_CODE = 'ticketbalance';
-    public static $PLUGIN_TICKETBALANCE_VERSION = '1.0.3';
+    public static $PLUGIN_TICKETBALANCE_VERSION = '1.0.2';
     public static $PLUGIN_TICKETBALANCE_AUTHOR = 'Richard Loureiro';
     public static $PLUGIN_TICKETBALANCE_LICENSE = 'GPLv3';
     public static $PLUGIN_TICKETBALANCE_HOME_PAGE = 'https://www.linkedin.com/in/richard-ti/';
     public static $PLUGIN_TICKETBALANCE_MIN_GLPI_VERSION = '9.5.2';
-    public static $PLUGIN_TICKETBALANCE_GLPI_VERSION_ERROR = "Este plugin requer GLPI >= 9.5.2 e GLPI <= 10.0.17";
-    public static $PLUGIN_TICKETBALANCE_MAX_GLPI_VERSION = '10.1.0';
+    public static $PLUGIN_TICKETBALANCE_GLPI_VERSION_ERROR = "Este plugin requer GLPI >= 9.5.2 e GLPI <= 11.0.0";
+    public static $PLUGIN_TICKETBALANCE_MAX_GLPI_VERSION = '11.0.0';
     public static $PLUGIN_TICKETBALANCE_MIN_PHP_VERSION = '7.3';
 
     public static function init() {
