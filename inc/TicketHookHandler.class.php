@@ -84,7 +84,11 @@ EOT;
                 $newAssignmentIndex = 0;
             }
         }
-        $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
+		if ($this->rrAssignmentsEntity->getOptionAutoAssignUser() === 1) {
+			$this->rrAssignmentsEntity->updateLastAssignmentIndexCategoria($itilcategoriesId, $newAssignmentIndex);
+		} else {
+			$this->rrAssignmentsEntity->updateLastAssignmentIndexGlobal($itilcategoriesId, $newAssignmentIndex);
+		}
 
         /**
          * set the assignment
@@ -102,7 +106,7 @@ EOT;
 
     protected function setAssignment($ticketId, $userId, $itilcategoriesId) {
         /**
-         * remove any prevous user assignment
+         * remove any previous user assignment
          */
         $sqlDelete_glpi_tickets_users = <<< EOT
             DELETE FROM glpi_tickets_users 
@@ -126,14 +130,13 @@ EOT;
          * insert the new assignment, based on rr
          */
         $sqlInsert_glpi_tickets_users = <<< EOT
-                    INSERT INTO glpi_tickets_users (tickets_id, users_id, type, use_notification) VALUES ({$ticketId}, {$userId}, 2, 0)
+                    INSERT INTO glpi_tickets_users (tickets_id, users_id, type, use_notification, alternative_email) VALUES ({$ticketId}, {$userId}, 2, 1, '')
 EOT;
         PluginTicketBalanceLogger::addWarning(__FUNCTION__ . ' - sqlInsert_glpi_tickets_users: ' . $sqlInsert_glpi_tickets_users);
         $this->DB->queryOrDie($sqlInsert_glpi_tickets_users, $this->DB->error());
 
-        /**
-         * if auto group assign is enabled assign the group too
-         */
+        // if auto group assign is enabled assign the group too
+
         if ($this->rrAssignmentsEntity->getOptionAutoAssignGroup() === 1) {
             $groups_id = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
             $sqlInsert_glpi_tickets_groups = <<< EOT

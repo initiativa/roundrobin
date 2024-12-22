@@ -46,6 +46,7 @@ EOT;
 
     public function displayContent() {
         $auto_assign_group = Html::cleanInputText(self::getAutoAssignGroup());
+        $auto_assign_user = Html::cleanInputText(self::getAutoAssignUser());
         $settings = self::getSettings();
 
         // Gerar o token CSRF e armazená-lo na sessão
@@ -65,6 +66,12 @@ EOT;
         echo "Atribuir também o grupo encarregado da Categoria ITIL? &nbsp;&nbsp;";
         echo "<input type='radio' name='auto_assign_group' value='1'" . ($auto_assign_group ? " checked='checked'" : "") . "> Sim&nbsp;&nbsp;";
         echo "<input type='radio' name='auto_assign_group' value='0'" . (!$auto_assign_group ? " checked='checked'" : "") . "> Não";
+        echo "</th></tr>";
+
+        echo "<tr><th colspan='4'>";
+        echo "Rodizio por categoria, ou global? &nbsp;&nbsp;";
+        echo "<input type='radio' name='auto_assign_user' value='1'" . ($auto_assign_user ? " checked='checked'" : "") . "> Categoria&nbsp;&nbsp;";
+        echo "<input type='radio' name='auto_assign_user' value='0'" . (!$auto_assign_user ? " checked='checked'" : "") . "> Global";
         echo "</th></tr>";
 
         echo "<tr><th colspan='4'><hr /></th></tr>";
@@ -105,6 +112,11 @@ EOT;
         return $instance->getOptionAutoAssignGroup();
     }
 
+    protected static function getAutoAssignUser() {
+        $instance = new PluginTicketBalanceRRAssignmentsEntity();
+        return $instance->getOptionAutoAssignUser();
+    }
+
     public function saveSettings() {
 		// Validação do token CSRF
 		if (!isset($_POST['_glpi_csrf_token']) || $_POST['_glpi_csrf_token'] !== $_SESSION['_glpi_csrf_token']) {
@@ -114,10 +126,9 @@ EOT;
         PluginTicketBalanceLogger::addWarning(__METHOD__ . ' - POST: ' . print_r($_POST, true));
         $rrAssignmentsEntity = new PluginTicketBalanceRRAssignmentsEntity();
 
-        /**
-         * Salvar opção(ões)
-         */
+        //Salvar opções)
         $rrAssignmentsEntity->updateAutoAssignGroup($_POST['auto_assign_group']);
+        $rrAssignmentsEntity->updateAutoAssignUser($_POST['auto_assign_user']);
 
         /**
          * Salvar todas as atribuições
