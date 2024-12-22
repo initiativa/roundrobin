@@ -5,7 +5,7 @@ class TicketBalanceConfigClass {
     public static $PLUGIN_TICKETBALANCE_ENV = 'desenvolvimento';
     public static $PLUGIN_TICKETBALANCE_NAME = 'Ticket Balance';
     public static $PLUGIN_TICKETBALANCE_CODE = 'ticketbalance';
-    public static $PLUGIN_TICKETBALANCE_VERSION = '1.0.2';
+    public static $PLUGIN_TICKETBALANCE_VERSION = '1.0.3';
     public static $PLUGIN_TICKETBALANCE_AUTHOR = 'Richard Loureiro';
     public static $PLUGIN_TICKETBALANCE_LICENSE = 'GPLv3';
     public static $PLUGIN_TICKETBALANCE_HOME_PAGE = 'https://www.linkedin.com/in/richard-ti/';
