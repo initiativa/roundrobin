@@ -17,7 +17,7 @@
  * RoundRobin is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU General Publi6789c License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with RoundRobin. If not, see <http://www.gnu.org/licenses/>.
@@ -128,46 +128,55 @@ EOT;
     }
 
     protected function setAssignment($ticketId, $userId, $itilcategoriesId) {
+        $this->DB->beginTransaction();
+        try {
         /**
          * remove any prevous user assignment
          */
         $sqlDelete_glpi_tickets_users = <<< EOT
             DELETE FROM glpi_tickets_users 
-            WHERE tickets_id = {$ticketId};
+            WHERE tickets_id = {$ticketId}
+                AND type = 2;
 EOT;
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlDelete_glpi_tickets_users: ' . $sqlDelete_glpi_tickets_users);
-        $this->DB->queryOrDie($sqlDelete_glpi_tickets_users, $this->DB->error());
+            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlDelete_glpi_tickets_users: ' . $sqlDelete_glpi_tickets_users);
+            $this->DB->queryOrDie($sqlDelete_glpi_tickets_users, $this->DB->error());
 
-        /**
-         * remove any previous group assignment
-         */
-        $sqlDelete_glpi_groups_tickets = <<< EOT
+            /**
+             * remove any previous group assignment
+             */
+            $sqlDelete_glpi_groups_tickets = <<< EOT
             DELETE FROM glpi_groups_tickets 
-            WHERE tickets_id = {$ticketId};
+            WHERE tickets_id = {$ticketId}
+                AND type = 2;
 EOT;
 
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlDelete_glpi_groups_tickets: ' . $sqlDelete_glpi_groups_tickets);
-        $this->DB->queryOrDie($sqlDelete_glpi_groups_tickets, $this->DB->error());
+            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlDelete_glpi_groups_tickets: ' . $sqlDelete_glpi_groups_tickets);
+            $this->DB->queryOrDie($sqlDelete_glpi_groups_tickets, $this->DB->error());
 
-        /**
-         * insert the new assignment, based on rr
-         */
-        $sqlInsert_glpi_tickets_users = <<< EOT
+            /**
+             * insert the new assignment, based on rr
+             */
+            $sqlInsert_glpi_tickets_users = <<< EOT
                     INSERT INTO glpi_tickets_users (tickets_id, users_id, type, use_notification) VALUES ({$ticketId}, {$userId}, 2, 0)
 EOT;
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlInsert_glpi_tickets_users: ' . $sqlInsert_glpi_tickets_users);
-        $this->DB->queryOrDie($sqlInsert_glpi_tickets_users, $this->DB->error());
+            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlInsert_glpi_tickets_users: ' . $sqlInsert_glpi_tickets_users);
+            $this->DB->queryOrDie($sqlInsert_glpi_tickets_users, $this->DB->error());
 
-        /**
-         * if auto group assign is enabled assign the group too
-         */
-        if ($this->rrAssignmentsEntity->getOptionAutoAssignGroup() === 1) {
-            $groups_id = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
-            $sqlInsert_glpi_tickets_groups = <<< EOT
+            /**
+             * if auto group assign is enabled assign the group too
+             */
+            if ($this->rrAssignmentsEntity->getOptionAutoAssignGroup() === 1) {
+                $groups_id = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
+                $sqlInsert_glpi_tickets_groups = <<< EOT
                     INSERT INTO glpi_groups_tickets (tickets_id, groups_id, type) VALUES ({$ticketId}, {$groups_id}, 2)
 EOT;
-            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlInsert_glpi_tickets_groups: ' . $sqlInsert_glpi_tickets_groups);
-            $this->DB->queryOrDie($sqlInsert_glpi_tickets_groups, $this->DB->error());
+                PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlInsert_glpi_tickets_groups: ' . $sqlInsert_glpi_tickets_groups);
+                $this->DB->queryOrDie($sqlInsert_glpi_tickets_groups, $this->DB->error());
+            }
+            $this->DB->commit();
+        } catch (Exception $ex) {
+            $this->DB->rollBack();
+            echo "Transakcja nie powiodła się: " . $e->getMessage();
         }
     }
 
