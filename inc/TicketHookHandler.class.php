@@ -176,7 +176,7 @@ EOT;
             $this->DB->commit();
         } catch (Exception $ex) {
             $this->DB->rollBack();
-            echo "Transakcja nie powiodła się: " . $e->getMessage();
+            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - transaction_aborted: ' . $ex->getMessage());
         }
     }
 
