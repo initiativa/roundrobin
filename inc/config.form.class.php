@@ -41,17 +41,6 @@ class PluginRoundRobinSettings extends CommonDBTM {
         PluginRoundRobinLogger::addWarning(__METHOD__ . ' - constructor called');
     }
 
-    public function renderTitle() {
-        $injectHTML = <<< EOT
-                <p>
-                    <div align='center'>
-                        <h1>RoundRobin Settings</h1>
-                    </div>
-                </p>
-EOT;
-        echo $injectHTML;
-    }
-
     public function showFormRoundRobin() {
         global $CFG_GLPI, $DB;
 

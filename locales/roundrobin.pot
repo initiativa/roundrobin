@@ -17,6 +17,9 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "RoundRobin Settings"
+msgstr ""
+
 msgid "Enable Group Round Robin Ticket Assignment for each ITILCategory"
 msgstr ""
 

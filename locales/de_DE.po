@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-30 01:37+0000\n"
-"PO-Revision-Date: 2025-03-05 19:46+0100\n"
+"PO-Revision-Date: 2025-03-06 07:38+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -17,6 +17,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.5\n"
+
+msgid "RoundRobin Settings"
+msgstr "Round Robin-Einstellungen"
 
 msgid "Enable Group Round Robin Ticket Assignment for each ITILCategory"
 msgstr "Gruppeneuzuordnung von Tickets im Round Robin für jede ITIL-Kategorie aktivieren"
@@ -53,4 +56,3 @@ msgstr "Speichern"
 
 msgid "Cancel"
 msgstr "Abbrechen"
-
