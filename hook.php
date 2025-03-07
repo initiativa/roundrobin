@@ -95,29 +95,81 @@ function plugin_roundrobin_uninstall() {
  * pre item add
  */
 function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - entered with item: " . print_r($item, true));
-    return $item;
+    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - pre add item: " . print_r($item, true));
+    if ($item->getType() !== 'Ticket') {
+        return true;
+    }
+
+    $categoryId = $item->input['itilcategories_id'];
+    $handler = new PluginRoundRobinTicketHookHandler();
+    $userId = $handler->findUserIdToAssign($categoryId);
+    if ($userId !== null) {
+        $input = $item->input;
+
+        if (isset($input['_users_id_assign'])) {
+            unset($input['_users_id_assign']);
+        }
+        
+        if (isset($input['_groups_id_assign'])) {
+            unset($input['_groups_id_assign']);
+        }
+        
+        if (isset($input['_actors']['assign'])) {
+            unset($input['_actors']['assign']);
+        }
+        
+        $item->input = $input;
+    }
+
+    return true;
 }
 
 /**
- * item added
+ * ticket added
  */
-function plugin_roundrobin_hook_item_add_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - entered with item: " . print_r($item, true));
-    $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
-    if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
-        $handler = $HOOK_HANDLERS[$item->getType()];
-        $handler->itemAdded($item);
-    }
+function plugin_roundrobin_hook_item_add_handler(Ticket $ticket) {
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($ticket->getType(), true));
+
+    $categoryId = $ticket->input['itilcategories_id'];
+
+    $handler = new PluginRoundRobinTicketHookHandler();
+    $userId = $handler->findUserIdToAssign($categoryId);
+
+    $ticket_id = $ticket->fields['id'];
+    
+    $ticket_user = new Ticket_User();
+
+    $ticket_user->add([
+        'tickets_id' => $ticket_id,
+        'users_id' => $userId,
+        'type' => CommonITILActor::ASSIGN
+    ]);
+    
+    // $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
+    // if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
+    //     $handler = $HOOK_HANDLERS[$item->getType()];
+    //     $handler->itemAdded($item);
+    // }
+    return $ticket;
+}
+function plugin_roundrobin_hook_itil_item_add_handler(ITILCategory $category) {
+    PluginRoundRobinLogger::addWarning(__FUNCTION__ . print_r($category, true));
+    $handler = new PluginRoundRobinITILCategoryHookHandler();
+    $handler->itemAdded($category);
+    return $category;
+}
+
+function plugin_roundrobin_hook_item_pre_update_handler(CommonDBTM $item) {
+    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - pre update item: " . print_r($item, true));
     return $item;
 }
+
 
 /**
  * item updated
  */
 function plugin_roundrobin_hook_item_update_handler(CommonDBTM $item) {
     PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - entered with item: " . print_r($item, true));
-    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - Hook Hanlder: ITEM UPDATE: " . $item->getType());
     Session::addMessageAfterRedirect(sprintf(__('%1$s: %2$s'), __('Hook Hanlder: ITEM UPDATE'), $item->getType()));
     return $item;
 }
@@ -134,7 +186,7 @@ function plugin_roundrobin_hook_pre_item_delete_handler(CommonDBTM $item) {
  * item deleted
  */
 function plugin_roundrobin_hook_item_delete_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - entered with item: " . print_r($item, true));
+    PluginRoundRobinLogger::addWarning( __FUNCTION__ . " - item: " . print_r($item, true));
     $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
     if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
         $handler = $HOOK_HANDLERS[$item->getType()];
