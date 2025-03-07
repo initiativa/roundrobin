@@ -57,5 +57,4 @@ if (isset($_REQUEST['cancel'])) {
 /**
  * then render current configuration
  */
-$pluginRoundRobinConfigForm->renderTitle();
 $pluginRoundRobinConfigForm->showFormRoundRobin();

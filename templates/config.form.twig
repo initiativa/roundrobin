@@ -1,0 +1,71 @@
+<div class="center">
+	<p>
+		<h1>{{ __('RoundRobin Settings', 'roundrobin') }}</h1>
+	</p>
+
+	<form name="settingsForm" action="config.form.php" method="post" enctype="multipart/form-data">
+		{{ csrf_token|raw }}
+		<table class="tab_cadre_fixe">
+			<tr>
+				<th colspan="4">{{ __('Enable Group Round Robin Ticket Assignment for each ITILCategory', 'roundrobin') }}</th>
+			</tr>
+			<tr>
+				<th colspan="4">
+					<hr/>
+				</th>
+			</tr>
+
+			<tr>
+				<th colspan="4">
+					{{ __('Assign also to the original Group:', 'roundrobin') }}
+					&nbsp;&nbsp;
+					<input type="radio" name="auto_assign_group" value="1" {% if auto_assign_group %} checked="checked" {% endif %}>
+					{{ __('Yes') }}&nbsp;&nbsp;
+					<input type="radio" name="auto_assign_group" value="0" {% if not auto_assign_group %} checked="checked" {% endif %}>
+					{{ __('No') }}
+				</th>
+			</tr>
+
+			<tr>
+				<th colspan="4">
+					<hr/>
+				</th>
+			</tr>
+			<tr>
+				<th>{{ __('ITILCategory', 'roundrobin') }}</th>
+				<th>{{ __('Group', 'roundrobin') }}</th>
+				<th>{{ __('Members #', 'roundrobin') }}</th>
+				<th>{{ __('Settings', 'roundrobin') }}</th>
+			</tr>
+
+			{% for row in settings %}
+				<tr>
+					<td>{{ row.category_name }}</td>
+					<td>{{ row.group_name|default("<em>" ~ __('No group assigned', 'roundrobin') ~ "</em>")|raw }}</td>
+					<td>{{ row.num_group_members|default("<em>N/A</em>")|raw }}</td>
+					<td>
+						<input type="hidden" name="itilcategories_id_{{ row.id }}" value="{{ row.itilcategories_id }}">
+						<input type="radio" name="is_active_{{ row.id }}" value="1" {% if row.is_active %} checked="checked" {% endif %}>
+						{{ __('Enabled', 'roundrobin') }}&nbsp;&nbsp;
+						<input type="radio" name="is_active_{{ row.id }}" value="0" {% if not row.is_active %} checked="checked" {% endif %}>
+						{{ __('Disabled', 'roundrobin') }}
+					</td>
+				</tr>
+			{% endfor %}
+
+			<tr>
+				<td colspan="4">
+					<hr/>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3">&nbsp;</td>
+				<td>
+					<input type="submit" name="save" class="submit" value="{{ __('Save') }}">
+					&nbsp;&nbsp;
+					<input type="submit" class="submit" name="cancel" value="{{ __('Cancel') }}">
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>

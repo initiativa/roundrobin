@@ -122,6 +122,39 @@ EOT;
         return $userId;
     }
 
+    public function findUserIdToAssign(int $itilcategoriesId) {
+        if (($lastAssignmentIndex = $this->getLastAssignmentIndexId($itilcategoriesId)) === false) {
+            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
+            return null;
+        }
+        $categoryGroupMembers = $this->getGroupsUsersByCategory($itilcategoriesId);
+        if (count($categoryGroupMembers) === 0) {
+            /**
+             * category w/o group, or group w/o users
+             */
+            return null;
+        }
+        $newAssignmentIndex = isset($lastAssignmentIndex) ? $lastAssignmentIndex + 1 : 0;
+        /**
+         * round robin
+         */
+        if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
+            $newAssignmentIndex = $newAssignmentIndex % count($categoryGroupMembers);
+            if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
+                $newAssignmentIndex = 0;
+            }
+        }
+        $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
+
+        $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
+        return $userId;
+    }
+
+    protected function getLastAssignmentIndexId(int $categoryId) {
+        return $this->rrAssignmentsEntity->getLastAssignmentIndex($categoryId);
+    }
+
+
     protected function getLastAssignmentIndex(CommonDBTM $item) {
         $itilcategoriesId = $this->getTicketCategory($item);
         return $this->rrAssignmentsEntity->getLastAssignmentIndex($itilcategoriesId);
