@@ -46,7 +46,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag -a v${{ steps.get-version.outputs.version }} -m "Release v${{ steps.get-version.outputs.version }}"
+          git tag -a ${{ steps.get-version.outputs.version }} -m "${{ steps.get-version.outputs.version }}"
           git push origin v${{ steps.get-version.outputs.version }}
       
       - name: Release creation
@@ -55,8 +55,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.get-version.outputs.version }}
-          name: Release v${{ steps.get-version.outputs.version }}
+          tag_name: ${{ steps.get-version.outputs.version }}
+          name: ${{ steps.get-version.outputs.version }}
           draft: false
           prerelease: false
           files: roundrobin-${{ steps.get-version.outputs.version }}.tar.gz
