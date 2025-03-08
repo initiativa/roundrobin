@@ -47,7 +47,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git tag -a ${{ steps.get-version.outputs.version }} -m "${{ steps.get-version.outputs.version }}"
-          git push origin v${{ steps.get-version.outputs.version }}
+          git push origin ${{ steps.get-version.outputs.version }}
       
       - name: Release creation
         id: create_release
