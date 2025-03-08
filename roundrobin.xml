@@ -23,10 +23,10 @@
     </authors>
     <versions>
         <version>
-            <num>1.0.4</num>
+            <num>1.0.5</num>
             <compatibility>9.5</compatibility>
             <compatibility>~10.0</compatibility>
-            <download_url>https://github.com/initiativa/roundrobin/releases/download/1.0.4/roundrobin-1.0.4.tar.gz</download_url>
+            <download_url>https://github.com/initiativa/roundrobin/releases/download/1.0.5/roundrobin-1.0.5.tar.gz</download_url>
         </version>
     </versions>
     <langs>
