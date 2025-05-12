@@ -95,14 +95,14 @@ function plugin_roundrobin_uninstall() {
  * pre item add
  */
 function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - pre add item: " . print_r($item, true));
+    PluginRoundRobinLogger::addWarning(__FUNCTION__ . " - pre add item.");
     if ($item->getType() !== 'Ticket') {
         return true;
     }
 
     $categoryId = $item->input['itilcategories_id'];
     $handler = new PluginRoundRobinTicketHookHandler();
-    $userId = $handler->findUserIdToAssign($categoryId);
+    $userId = $handler->findUserIdToAssign($categoryId, false);
     if ($userId !== null) {
         $input = $item->input;
 

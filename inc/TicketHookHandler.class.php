@@ -122,7 +122,7 @@ EOT;
         return $userId;
     }
 
-    public function findUserIdToAssign(int $itilcategoriesId) {
+    public function findUserIdToAssign(int $itilcategoriesId, bool $storeChoice = true) {
         if (($lastAssignmentIndex = $this->getLastAssignmentIndexId($itilcategoriesId)) === false) {
             PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
             return null;
@@ -144,7 +144,10 @@ EOT;
                 $newAssignmentIndex = 0;
             }
         }
-        $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
+
+        if ($storeChoice) {
+            $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
+        }
 
         $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
         return $userId;

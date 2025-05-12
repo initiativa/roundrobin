@@ -6,3 +6,4 @@ composer.phar
 # composer.lock
 /nbproject/
 .vscode/
+/.idea/
