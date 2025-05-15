@@ -101,24 +101,26 @@ function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
     }
 
     $categoryId = $item->input['itilcategories_id'];
-    $handler = new PluginRoundRobinTicketHookHandler();
-    $userId = $handler->findUserIdToAssign($categoryId, false);
-    if ($userId !== null) {
-        $input = $item->input;
+    if ($categoryId !== null) {
+        $handler = new PluginRoundRobinTicketHookHandler();
+        $userId = $handler->findUserIdToAssign($categoryId, false);
+        if ($userId !== null) {
+            $input = $item->input;
 
-        if (isset($input['_users_id_assign'])) {
-            unset($input['_users_id_assign']);
+            if (isset($input['_users_id_assign'])) {
+                unset($input['_users_id_assign']);
+            }
+
+            if (isset($input['_groups_id_assign'])) {
+                unset($input['_groups_id_assign']);
+            }
+
+            if (isset($input['_actors']['assign'])) {
+                unset($input['_actors']['assign']);
+            }
+
+            $item->input = $input;
         }
-        
-        if (isset($input['_groups_id_assign'])) {
-            unset($input['_groups_id_assign']);
-        }
-        
-        if (isset($input['_actors']['assign'])) {
-            unset($input['_actors']['assign']);
-        }
-        
-        $item->input = $input;
     }
 
     return true;
@@ -132,24 +134,21 @@ function plugin_roundrobin_hook_item_add_handler(Ticket $ticket) {
 
     $categoryId = $ticket->input['itilcategories_id'];
 
-    $handler = new PluginRoundRobinTicketHookHandler();
-    $userId = $handler->findUserIdToAssign($categoryId);
+    if ($categoryId !== null) {
+        $handler = new PluginRoundRobinTicketHookHandler();
+        $userId = $handler->findUserIdToAssign($categoryId);
 
-    $ticket_id = $ticket->fields['id'];
-    
-    $ticket_user = new Ticket_User();
+        $ticket_id = $ticket->fields['id'];
 
-    $ticket_user->add([
-        'tickets_id' => $ticket_id,
-        'users_id' => $userId,
-        'type' => CommonITILActor::ASSIGN
-    ]);
-    
-    // $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
-    // if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
-    //     $handler = $HOOK_HANDLERS[$item->getType()];
-    //     $handler->itemAdded($item);
-    // }
+        $ticket_user = new Ticket_User();
+
+        $ticket_user->add([
+            'tickets_id' => $ticket_id,
+            'users_id' => $userId,
+            'type' => CommonITILActor::ASSIGN
+        ]);
+    }
+
     return $ticket;
 }
 function plugin_roundrobin_hook_itil_item_add_handler(ITILCategory $category) {
