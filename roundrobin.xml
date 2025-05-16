@@ -26,7 +26,7 @@
             <num>1.0.7</num>
             <compatibility>9.5</compatibility>
             <compatibility>~10.0</compatibility>
-            <download_url>https://github.com/initiativa/roundrobin/releases/download/1.0.6/roundrobin-1.0.7.tar.gz</download_url>
+            <download_url>https://github.com/initiativa/roundrobin/releases/download/1.0.7/roundrobin-1.0.7.tar.gz</download_url>
         </version>
     </versions>
     <langs>
