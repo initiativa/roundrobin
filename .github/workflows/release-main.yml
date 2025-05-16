@@ -51,7 +51,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git tag -a ${{ steps.get-version.outputs.version }} -m "${{ steps.get-version.outputs.version }}"
           git push origin ${{ steps.get-version.outputs.version }}
-          continue-on-error: true
+        continue-on-error: true
       
       - name: Release creation
         id: create_release
