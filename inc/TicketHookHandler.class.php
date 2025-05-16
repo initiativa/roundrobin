@@ -42,12 +42,12 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
     }
 
     public function itemAdded(CommonDBTM $item) {
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - Item Type: " . $item->getType());
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - Item Type: " . $item->getType());
         if ($item->getType() !== 'Ticket') {
             return;
         }
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - TicketId: " . $this->getTicketId($item));
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - CategoryId: " . $this->getTicketCategory($item));
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - TicketId: " . $this->getTicketId($item));
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - CategoryId: " . $this->getTicketCategory($item));
         $this->assignTicket($item);
     }
 
@@ -84,14 +84,14 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
 EOT;
         $resultCollection = $this->DB->queryOrDie($sql, $this->DB->error());
         $resultArray = iterator_to_array($resultCollection);
-        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - result array: ', $resultArray);
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - result array: ', $resultArray);
         return $resultArray;
     }
 
     protected function assignTicket(CommonDBTM $item) {
         $itilcategoriesId = $this->getTicketCategory($item);
         if (($lastAssignmentIndex = $this->getLastAssignmentIndex($item)) === false) {
-            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
             return;
         }
         $categoryGroupMembers = $this->getGroupsUsersByCategory($this->getTicketCategory($item));
@@ -124,7 +124,7 @@ EOT;
 
     public function findUserIdToAssign(int $itilcategoriesId, bool $storeChoice = true) {
         if (($lastAssignmentIndex = $this->getLastAssignmentIndexId($itilcategoriesId)) === false) {
-            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
             return null;
         }
         $categoryGroupMembers = $this->getGroupsUsersByCategory($itilcategoriesId);
@@ -171,7 +171,7 @@ EOT;
             DELETE FROM glpi_tickets_users 
             WHERE tickets_id = {$ticketId};
 EOT;
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlDelete_glpi_tickets_users: ' . $sqlDelete_glpi_tickets_users);
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlDelete_glpi_tickets_users: ' . $sqlDelete_glpi_tickets_users);
         $this->DB->queryOrDie($sqlDelete_glpi_tickets_users, $this->DB->error());
 
         /**
@@ -182,7 +182,7 @@ EOT;
             WHERE tickets_id = {$ticketId};
 EOT;
 
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlDelete_glpi_groups_tickets: ' . $sqlDelete_glpi_groups_tickets);
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlDelete_glpi_groups_tickets: ' . $sqlDelete_glpi_groups_tickets);
         $this->DB->queryOrDie($sqlDelete_glpi_groups_tickets, $this->DB->error());
 
         /**
@@ -191,7 +191,7 @@ EOT;
         $sqlInsert_glpi_tickets_users = <<< EOT
                     INSERT INTO glpi_tickets_users (tickets_id, users_id, type, use_notification) VALUES ({$ticketId}, {$userId}, 2, 0)
 EOT;
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlInsert_glpi_tickets_users: ' . $sqlInsert_glpi_tickets_users);
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlInsert_glpi_tickets_users: ' . $sqlInsert_glpi_tickets_users);
         $this->DB->queryOrDie($sqlInsert_glpi_tickets_users, $this->DB->error());
 
         /**
@@ -202,17 +202,17 @@ EOT;
             $sqlInsert_glpi_tickets_groups = <<< EOT
                     INSERT INTO glpi_groups_tickets (tickets_id, groups_id, type) VALUES ({$ticketId}, {$groups_id}, 2)
 EOT;
-            PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - sqlInsert_glpi_tickets_groups: ' . $sqlInsert_glpi_tickets_groups);
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlInsert_glpi_tickets_groups: ' . $sqlInsert_glpi_tickets_groups);
             $this->DB->queryOrDie($sqlInsert_glpi_tickets_groups, $this->DB->error());
         }
     }
 
     public function itemPurged(CommonDBTM $item) {
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - nothing to do');
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to do');
     }
 
     public function itemDeleted(CommonDBTM $item) {
-        PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - nothing to do');
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to do');
     }
 
 }

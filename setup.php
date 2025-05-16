@@ -41,7 +41,7 @@ require_once PLUGIN_ROUNDROBIN_DIR . '/inc/config.class.php';
  * @return void
  */
 function plugin_init_roundrobin() {
-    PluginRoundRobinLogger::addWarning(__FUNCTION__ . ' - plugin initialization');
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - plugin initialization');
     PluginRoundRobinConfig::init();
     PluginRoundRobinConfig::loadSources();
 }

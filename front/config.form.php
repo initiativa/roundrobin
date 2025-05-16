@@ -42,14 +42,14 @@ $pluginRoundRobinConfigForm = new PluginRoundRobinSettings();
  * check for post form data and perform requested action
  */
 if (isset($_REQUEST['save'])) {
-    PluginRoundRobinLogger::addWarning(__METHOD__ . ' - SAVE: POST: ', $_POST);
+    PluginRoundRobinLogger::addDebug(__METHOD__ . ' - SAVE: POST: ', $_POST);
     $pluginRoundRobinConfigForm::saveSettings();
     Session::AddMessageAfterRedirect('Config saved');
     Html::back();
 }
 
 if (isset($_REQUEST['cancel'])) {
-    PluginRoundRobinLogger::addWarning(__METHOD__ . ' - CANCEL: POST: ', $_POST);
+    PluginRoundRobinLogger::addDebug(__METHOD__ . ' - CANCEL: POST: ', $_POST);
     Session::AddMessageAfterRedirect('Config reset');
     Html::back();
 }

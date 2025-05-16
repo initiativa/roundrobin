@@ -43,7 +43,7 @@ class PluginRoundRobinConfig {
     public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '7.3';
 
     public static function init() {
-        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - defining hooks handlers');
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - defining hooks handlers');
         global $PLUGIN_HOOKS;
         $PLUGIN_HOOKS['csrf_compliant'][self::$PLUGIN_ROUNDROBIN_CODE] = true;
         /**
@@ -104,7 +104,7 @@ class PluginRoundRobinConfig {
     public static function loadSources() {
         global $PLUGIN_HOOKS;
 
-        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - loading sources...');
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - loading sources...');
         /**
          * add config section
          */
@@ -123,7 +123,7 @@ class PluginRoundRobinConfig {
         foreach ($uriArray as $uri) {
             if (strpos(PluginRoundRobinRequest::getServerParam('REQUEST_URI'), $uri) !== false) {
                 $PLUGIN_HOOKS[$hook][self::$PLUGIN_ROUNDROBIN_CODE] = $sourceFile;
-                PluginRoundRobinLogger::addWarning(__METHOD__ . " - source $sourceFile loaded!");
+                PluginRoundRobinLogger::addDebug(__METHOD__ . " - source $sourceFile loaded!");
                 break;
             }
         }

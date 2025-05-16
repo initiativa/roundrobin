@@ -38,14 +38,14 @@ use Translate;
 class PluginRoundRobinSettings extends CommonDBTM {
 
     public function __construct() {
-        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - constructor called');
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - constructor called');
     }
 
     public function showFormRoundRobin() {
         global $CFG_GLPI, $DB;
 
         if (self::checkCentralInterface()) {
-            PluginRoundRobinLogger::addWarning(__METHOD__ . ' - display contents');
+            PluginRoundRobinLogger::addDebug(__METHOD__ . ' - display contents');
             self::displayContent();
         } else {
             echo "<div align='center'><br><img src='" . $CFG_GLPI['root_doc'] . "/pics/warning.png'><br>" . __("Access denied") . "</div>";
@@ -54,7 +54,7 @@ class PluginRoundRobinSettings extends CommonDBTM {
 
     public static function checkCentralInterface() {
         $currentInterface = Session::getCurrentInterface();
-        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - current interface: ' . $currentInterface);
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - current interface: ' . $currentInterface);
         return $currentInterface === 'central';
     }
 
@@ -80,7 +80,7 @@ class PluginRoundRobinSettings extends CommonDBTM {
     }
 
     public static function saveSettings() {
-        PluginRoundRobinLogger::addWarning(__METHOD__ . ' - POST: ' . print_r($_POST, true));
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - POST: ' . print_r($_POST, true));
         $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
 
         /**

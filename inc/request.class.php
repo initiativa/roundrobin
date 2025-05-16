@@ -65,7 +65,7 @@ EOT;
         $configArray = iterator_to_array($collection);
 
         $settingsArray = iterator_to_array($collection);
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - profile_id: $profileId results: " . var_export($settingsArray, true));
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - profile_id: $profileId results: " . var_export($settingsArray, true));
         return count($settingsArray) === 1 ? $settingsArray[0]['hasTypeAsCategory'] : null;
     }
 

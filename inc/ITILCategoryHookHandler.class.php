@@ -30,11 +30,11 @@
 class PluginRoundRobinITILCategoryHookHandler extends CommonDBTM implements IPluginRoundRobinHookItemHandler {
 
     public function itemAdded(CommonDBTM $item) {
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - Item Type: " . $item->getType());
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - Item Type: " . $item->getType());
         if ($item->getType() !== 'ITILCategory') {
             return;
         }
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - ITILCategoryId: " . $this->getItilCategoryId($item));
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - ITILCategoryId: " . $this->getItilCategoryId($item));
         $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
         $rrAssignmentsEntity->insertItilCategory($this->getItilCategoryId($item));
     }
@@ -44,21 +44,21 @@ class PluginRoundRobinITILCategoryHookHandler extends CommonDBTM implements IPlu
     }
 
     public function itemDeleted(CommonDBTM $item) {
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - Item Type: " . $item->getType());
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - Item Type: " . $item->getType());
         if ($item->getType() !== 'ITILCategory') {
             return;
         }
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - ITILCategoryId: " . $this->getItilCategoryId($item));
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - ITILCategoryId: " . $this->getItilCategoryId($item));
         $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
         $rrAssignmentsEntity->updateIsActive($this->getItilCategoryId($item), 0);
     }
 
     public function itemPurged(CommonDBTM $item) {
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - Item Type: " . $item->getType());
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - Item Type: " . $item->getType());
         if ($item->getType() !== 'ITILCategory') {
             return;
         }
-        PluginRoundRobinLogger::addWarning(__METHOD__ . " - ITILCategoryId: " . $this->getItilCategoryId($item));
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - ITILCategoryId: " . $this->getItilCategoryId($item));
         $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
         $rrAssignmentsEntity->deleteItilCategory($this->getItilCategoryId($item));
     }
