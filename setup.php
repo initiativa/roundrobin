@@ -2,99 +2,177 @@
 
 /**
  * -------------------------------------------------------------------------
- * RoundRobin plugin for GLPI
+ * RoundRobin plugin for GLPI 11 - PRODUCTION READY
  * -------------------------------------------------------------------------
- *
- * LICENSE
- *
- * This file is part of RoundRobin GLPI Plugin.
- *
- * RoundRobin is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * RoundRobin is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with RoundRobin. If not, see <http://www.gnu.org/licenses/>.
- * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2022 by initiativa s.r.l. - http://www.initiativa.it
- * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
- * @link      https://github.com/initiativa/roundrobin
- * -------------------------------------------------------------------------
+ * @license GPLv3
  */
+
 if (!defined('PLUGIN_ROUNDROBIN_DIR')) {
     define('PLUGIN_ROUNDROBIN_DIR', __DIR__);
 }
 
-require_once PLUGIN_ROUNDROBIN_DIR . '/inc/logger.class.php';
-require_once PLUGIN_ROUNDROBIN_DIR . '/inc/request.class.php';
-require_once PLUGIN_ROUNDROBIN_DIR . '/inc/config.class.php';
-
 /**
  * Init the hooks of the plugins - Needed
- *
- * @return void
  */
 function plugin_init_roundrobin() {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - plugin initialization');
-    PluginRoundRobinConfig::init();
-    PluginRoundRobinConfig::loadSources();
-}
-
-/**
- * Get the name and the version of the plugin - Needed
- *
- * @return array
- */
-function plugin_version_roundrobin() {
-    return PluginRoundRobinConfig::getVersion();
-}
-
-/**
- * Optional : check prerequisites before install : may print errors or add to message after redirect
- *            (to disable the check, return always true)
- *
- * @return boolean
- */
-function plugin_roundrobin_check_prerequisites() {
-    /*
-     * glpi version check
-     */
-    if (version_compare(GLPI_VERSION, PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION, 'le') ||
-            version_compare(GLPI_VERSION, PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION, 'ge')) {
-        PluginRoundRobinLogger::addCritical(__FUNCTION__ . ' - plugin prerequisites do not match: ' . PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR);
-        if (method_exists('Plugin', 'messageIncompatible')) {
-            Plugin::messageIncompatible('core', PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR);
-        }
-        return false;
-    }
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - plugin CAN be installed AND activated');
+    global $PLUGIN_HOOKS;
+    
+    // Register config page
+    $PLUGIN_HOOKS['config_page']['roundrobin'] = 'front/config.form.php';
+    
+    // Register ticket creation hook - GLPI 11 format
+    $PLUGIN_HOOKS['pre_item_add']['roundrobin'] = [
+        'Ticket' => 'plugin_roundrobin_pre_item_add_ticket'
+    ];
+    
+    // Register ITIL category hooks for automatic sync
+    $PLUGIN_HOOKS['item_add']['roundrobin'] = [
+        'ITILCategory' => 'plugin_roundrobin_item_add_category'
+    ];
+    
+    $PLUGIN_HOOKS['item_purge']['roundrobin'] = [
+        'ITILCategory' => 'plugin_roundrobin_item_purge_category'
+    ];
+    
     return true;
 }
 
 /**
- * Check configuration process for plugin : need to return true if succeeded
- * Can display a message only if failure and $verbose is true
- *
- * @param boolean $verbose Enable verbosity. Default to false
- *
- * @return boolean
+ * Get the name and the version of the plugin - Needed
+ */
+function plugin_version_roundrobin() {
+    return [
+        'name' => 'Round Robin',
+        'version' => '2.1.0',
+        'author' => 'initiativa s.r.l.',
+        'license' => 'GPLv3',
+        'homepage' => 'https://github.com/initiativa/roundrobin/',
+        'requirements' => [
+            'glpi' => [
+                'min' => '11.0.0',
+                'max' => '11.0.99'
+            ],
+            'php' => [
+                'min' => '8.1'
+            ]
+        ]
+    ];
+}
+
+/**
+ * Check prerequisites before install
+ * GLPI automatically checks version requirements from plugin_version_roundrobin()
+ */
+function plugin_roundrobin_check_prerequisites() {
+    // Check PHP version
+    $version = plugin_version_roundrobin();
+    if (version_compare(PHP_VERSION, $version['requirements']['php']['min'], '<')) {
+        echo "This plugin requires PHP >= " . $version['requirements']['php']['min'];
+        return false;
+    }
+    
+    // GLPI version check is handled automatically by GLPI from the requirements array
+    return true;
+}
+
+/**
+ * Check configuration process for plugin
  */
 function plugin_roundrobin_check_config($verbose = false) {
-    /**
-     * @todo if needed add check behaviour
-     */
-    if (true) {
-        return true;
-    }
+    return true;
+}
 
-    if ($verbose) {
-        echo "Installed, but not configured";
+/**
+ * Install hook - Create database tables
+ */
+function plugin_install_roundrobin() {
+    global $DB;
+    
+    $migration = new Migration(210);
+    $pluginCode = 'roundrobin';
+    $rrAssignmentTable = "glpi_plugin_{$pluginCode}_rr_assignments";
+    $rrOptionsTable = "glpi_plugin_{$pluginCode}_rr_options";
+    
+    // Create assignment table
+    if (!$DB->tableExists($rrAssignmentTable)) {
+        $query = "CREATE TABLE `{$rrAssignmentTable}` (
+            `id` int unsigned NOT NULL AUTO_INCREMENT,
+            `itilcategories_id` int unsigned NOT NULL,
+            `is_active` tinyint NOT NULL DEFAULT 0,
+            `last_assignment_index` int DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `ix_itilcategories_uq` (`itilcategories_id`),
+            KEY `ix_is_active` (`is_active`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
+        
+        $DB->doQueryOrDie($query, "Error creating {$rrAssignmentTable}");
     }
-    return false;
+    
+    // Create options table
+    if (!$DB->tableExists($rrOptionsTable)) {
+        $query = "CREATE TABLE `{$rrOptionsTable}` (
+            `id` int unsigned NOT NULL AUTO_INCREMENT,
+            `auto_assign_group` tinyint NOT NULL DEFAULT 1,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
+        
+        $DB->doQueryOrDie($query, "Error creating {$rrOptionsTable}");
+        
+        // Insert default option
+        $DB->insert($rrOptionsTable, ['auto_assign_group' => 1]);
+    }
+    
+    // Populate with existing ITIL categories
+    $categories = $DB->request([
+        'SELECT' => ['id'],
+        'FROM' => 'glpi_itilcategories'
+    ]);
+    
+    foreach ($categories as $category) {
+        $exists = $DB->request([
+            'FROM' => $rrAssignmentTable,
+            'WHERE' => ['itilcategories_id' => $category['id']],
+            'LIMIT' => 1
+        ]);
+        
+        if (count($exists) === 0) {
+            $DB->insert($rrAssignmentTable, [
+                'itilcategories_id' => $category['id'],
+                'is_active' => 0
+            ]);
+        }
+    }
+    
+    return true;
+}
+
+/**
+ * Uninstall hook - Clean up database
+ */
+function plugin_uninstall_roundrobin() {
+    global $DB;
+    
+    $pluginCode = 'roundrobin';
+    $rrAssignmentTable = "glpi_plugin_{$pluginCode}_rr_assignments";
+    $rrOptionsTable = "glpi_plugin_{$pluginCode}_rr_options";
+    
+    // Drop tables if they exist
+    if ($DB->tableExists($rrAssignmentTable)) {
+        $DB->doQueryOrDie("DROP TABLE `{$rrAssignmentTable}`", "Error dropping {$rrAssignmentTable}");
+    }
+    
+    if ($DB->tableExists($rrOptionsTable)) {
+        $DB->doQueryOrDie("DROP TABLE `{$rrOptionsTable}`", "Error dropping {$rrOptionsTable}");
+    }
+    
+    return true;
+}
+
+// Alternative function names for backward compatibility
+function plugin_roundrobin_install() {
+    return plugin_install_roundrobin();
+}
+
+function plugin_roundrobin_uninstall() {
+    return plugin_uninstall_roundrobin();
 }

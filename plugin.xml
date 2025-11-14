@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+    <name>roundrobin</name>
+    <version>2.1.0</version>
+    <description>RoundRobin plugin for GLPI 11 - Automatic Round Robin Ticket Assignment</description>
+    <author>initiativa s.r.l.</author>
+    <homepage>https://github.com/initiativa/roundrobin/</homepage>
+    <license>GPL-3.0-or-later</license>
+    <min_glpi>11.0.0</min_glpi>
+    <max_glpi>11.0.99</max_glpi>
+    <min_php>8.1</min_php>
+    <language>en</language>
+</plugin>

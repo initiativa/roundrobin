@@ -2,207 +2,170 @@
 
 /**
  * -------------------------------------------------------------------------
- * RoundRobin plugin for GLPI
+ * RoundRobin plugin for GLPI 11 - Hook Handlers
  * -------------------------------------------------------------------------
- *
- * LICENSE
- *
- * This file is part of RoundRobin GLPI Plugin.
- *
- * RoundRobin is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * RoundRobin is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with RoundRobin. If not, see <http://www.gnu.org/licenses/>.
- * -------------------------------------------------------------------------
- * @copyright Copyright (C) 2022 by initiativa s.r.l. - http://www.initiativa.it
- * @license   GPLv3 https://www.gnu.org/licenses/gpl-3.0.html
- * @link      https://github.com/initiativa/roundrobin
- * -------------------------------------------------------------------------
+ * @license GPLv3
  */
+
 if (!defined('GLPI_ROOT')) {
-    define('GLPI_ROOT', '../../..');
+    die("Sorry. You can't access this file directly");
 }
-require_once GLPI_ROOT . '/inc/includes.php';
 
 if (!defined('PLUGIN_ROUNDROBIN_DIR')) {
     define('PLUGIN_ROUNDROBIN_DIR', __DIR__);
 }
-require_once PLUGIN_ROUNDROBIN_DIR . '/inc/TicketHookHandler.class.php';
-require_once PLUGIN_ROUNDROBIN_DIR . '/inc/ITILCategoryHookHandler.class.php';
+
 require_once PLUGIN_ROUNDROBIN_DIR . '/inc/RRAssignmentsEntity.class.php';
 
 /**
- * Hook Item Handlers by Item Type
+ * Hook: pre_item_add for Ticket
+ * Automatically assigns tickets to technicians in round-robin fashion
+ * 
+ * @param Ticket $item The ticket object being created
+ * @return void
  */
-function plugin_roundrobin_getHookHandlers() {
-    $HOOK_HANDLERS = [
-        'Ticket' => new PluginRoundRobinTicketHookHandler(),
-        'ITILCategory' => new PluginRoundRobinITILCategoryHookHandler()
-    ];
-    return $HOOK_HANDLERS;
-}
-
-/**
- * Install hook
- *
- * @return boolean
- */
-function plugin_roundrobin_install() {
+function plugin_roundrobin_pre_item_add_ticket($item) {
     global $DB;
-
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - entered...');
-    $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
-
-    /**
-     * create setting table
-     */
-    $rrAssignmentsEntity->init();
-    return true;
-}
-
-/**
- * Uninstall hook
- *
- * @return boolean
- */
-function plugin_roundrobin_uninstall() {
-    global $DB;
-    /**
-     * @todo removing tables, generated files, ...
-     */
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - entered...');
-    $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
-    /**
-     * drop settings
-     */
-    $rrAssignmentsEntity->cleanUp();
-    return true;
-}
-
-/**
- * hook handlers
- */
-
-/**
- * pre item add
- */
-function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - pre add item.");
-    if ($item->getType() !== 'Ticket') {
-        return true;
-    }
-
-    $categoryId = $item->input['itilcategories_id'];
-    if ($categoryId !== null) {
-        $handler = new PluginRoundRobinTicketHookHandler();
-        $userId = $handler->findUserIdToAssign($categoryId, false);
-        if ($userId !== null) {
-            $input = $item->input;
-
-            if (isset($input['_users_id_assign'])) {
-                unset($input['_users_id_assign']);
-            }
-
-            if (isset($input['_groups_id_assign'])) {
-                unset($input['_groups_id_assign']);
-            }
-
-            if (isset($input['_actors']['assign'])) {
-                unset($input['_actors']['assign']);
-            }
-
-            $item->input = $input;
+    
+    try {
+        // Only process if there's a category
+        if (!isset($item->input['itilcategories_id']) || empty($item->input['itilcategories_id'])) {
+            return;
         }
+        
+        $categoryId = (int)$item->input['itilcategories_id'];
+        
+        // Initialize database entity
+        $rrEntity = new PluginRoundRobinRRAssignmentsEntity();
+        
+        // Check if round-robin is active for this category
+        if (!$rrEntity->isCategoryActive($categoryId)) {
+            return;
+        }
+        
+        // Get the group associated with this ITIL category
+        $groupId = $rrEntity->getGroupByItilCategory($categoryId);
+        
+        if (!$groupId) {
+            return;
+        }
+        
+        // Get group members
+        $members = $rrEntity->getGroupMembers($groupId);
+        
+        if (empty($members)) {
+            return;
+        }
+        
+        // Filter out inactive users
+        $activeMembers = [];
+        foreach ($members as $member) {
+            $user = $DB->request([
+                'FROM' => 'glpi_users',
+                'WHERE' => [
+                    'id' => $member['users_id'],
+                    'is_active' => 1,
+                    'is_deleted' => 0
+                ],
+                'LIMIT' => 1
+            ]);
+            
+            if (count($user) > 0) {
+                $activeMembers[] = $member;
+            }
+        }
+        
+        if (empty($activeMembers)) {
+            return;
+        }
+        
+        // Get last assignment index for this GROUP (not just this category)
+        // This ensures fair distribution across all categories using the same group
+        $lastIndex = $rrEntity->getLastAssignmentIndexByGroup($groupId);
+        
+        // Calculate next index (round-robin)
+        if ($lastIndex === false || $lastIndex === null) {
+            $nextIndex = 0;
+        } else {
+            $nextIndex = ($lastIndex + 1) % count($activeMembers);
+        }
+        
+        // Get the next user to assign
+        $assignedMember = $activeMembers[$nextIndex];
+        $assignedUserId = $assignedMember['users_id'];
+        
+        // Update the last assignment index for ALL categories using this group
+        $rrEntity->updateLastAssignmentIndexByGroup($groupId, $nextIndex);
+        
+        // Assign the user - GLPI 11 format using _actors array
+        if (!isset($item->input['_actors'])) {
+            $item->input['_actors'] = [];
+        }
+        
+        if (!isset($item->input['_actors']['assign'])) {
+            $item->input['_actors']['assign'] = [];
+        }
+        
+        // Add user to assignment
+        $item->input['_actors']['assign'][] = [
+            'itemtype' => 'User',
+            'items_id' => $assignedUserId,
+            'use_notification' => 1
+        ];
+        
+        // Optionally assign the group as well
+        $autoAssignGroup = $rrEntity->getOptionAutoAssignGroup();
+        
+        if ($autoAssignGroup) {
+            $item->input['_actors']['assign'][] = [
+                'itemtype' => 'Group',
+                'items_id' => $groupId,
+                'use_notification' => 1
+            ];
+        }
+        
+        // Log the assignment for debugging
+        if (defined('GLPI_LOG_DIR')) {
+            Toolbox::logInFile('roundrobin', "Assigned ticket to User #{$assignedUserId} from Group #{$groupId} for Category #{$categoryId}");
+        }
+        
+    } catch (Exception $e) {
+        Toolbox::logInFile('php-errors', "RoundRobin pre_item_add error: " . $e->getMessage());
     }
-
-    return true;
 }
 
 /**
- * ticket added
+ * Hook: item_add for ITILCategory
+ * Automatically adds new categories to the round-robin configuration
+ * 
+ * @param ITILCategory $item The category being added
+ * @return void
  */
-function plugin_roundrobin_hook_item_add_handler(Ticket $ticket) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($ticket->getType(), true));
-
-    $categoryId = $ticket->input['itilcategories_id'];
-
-    if ($categoryId !== null) {
-        $handler = new PluginRoundRobinTicketHookHandler();
-        $userId = $handler->findUserIdToAssign($categoryId);
-
-        $ticket_id = $ticket->fields['id'];
-
-        $ticket_user = new Ticket_User();
-
-        $ticket_user->add([
-            'tickets_id' => $ticket_id,
-            'users_id' => $userId,
-            'type' => CommonITILActor::ASSIGN
-        ]);
+function plugin_roundrobin_item_add_category($item) {
+    try {
+        if ($item instanceof ITILCategory) {
+            $rrEntity = new PluginRoundRobinRRAssignmentsEntity();
+            $rrEntity->addCategory($item->getID());
+        }
+    } catch (Exception $e) {
+        Toolbox::logInFile('php-errors', "RoundRobin item_add_category error: " . $e->getMessage());
     }
-
-    return $ticket;
-}
-function plugin_roundrobin_hook_itil_item_add_handler(ITILCategory $category) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . print_r($category, true));
-    $handler = new PluginRoundRobinITILCategoryHookHandler();
-    $handler->itemAdded($category);
-    return $category;
-}
-
-function plugin_roundrobin_hook_item_pre_update_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - pre update item: " . print_r($item, true));
-    return $item;
-}
-
-
-/**
- * item updated
- */
-function plugin_roundrobin_hook_item_update_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($item, true));
-    Session::addMessageAfterRedirect(sprintf(__('%1$s: %2$s'), __('Hook Hanlder: ITEM UPDATE'), $item->getType()));
-    return $item;
 }
 
 /**
- * pre item delete
+ * Hook: item_purge for ITILCategory
+ * Removes purged categories from the round-robin configuration
+ * 
+ * @param ITILCategory $item The category being purged
+ * @return void
  */
-function plugin_roundrobin_hook_pre_item_delete_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($item, true));
-    return $item;
-}
-
-/**
- * item deleted
- */
-function plugin_roundrobin_hook_item_delete_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug( __FUNCTION__ . " - item: " . print_r($item, true));
-    $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
-    if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
-        $handler = $HOOK_HANDLERS[$item->getType()];
-        $handler->itemDeleted($item);
+function plugin_roundrobin_item_purge_category($item) {
+    try {
+        if ($item instanceof ITILCategory) {
+            $rrEntity = new PluginRoundRobinRRAssignmentsEntity();
+            $rrEntity->removeCategory($item->getID());
+        }
+    } catch (Exception $e) {
+        Toolbox::logInFile('php-errors', "RoundRobin item_purge_category error: " . $e->getMessage());
     }
-    return $item;
-}
-
-/**
- * item purged
- */
-function plugin_roundrobin_hook_item_purge_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($item, true));
-    $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
-    if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
-        $handler = $HOOK_HANDLERS[$item->getType()];
-        $handler->itemPurged($item);
-    }
-    return $item;
 }
