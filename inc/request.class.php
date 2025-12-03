@@ -56,15 +56,14 @@ class PluginRoundRobinRequest {
         $pluginCode = PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_CODE;
         $settingTableConfig = "glpi_plugin_" . $pluginCode . "_config";
         $profileId = self::getUserProfileId();
-        $sql = <<< EOT
-                SELECT c.*
-                FROM $settingTableConfig c JOIN glpi_profiles p ON p.id = c.profile_id
-                WHERE c.profile_id = $profileId;
-EOT;
-        $collection = $DB->queryOrDie($sql, $DB->error());
-        $configArray = iterator_to_array($collection);
-
-        $settingsArray = iterator_to_array($collection);
+        
+        // GLPI 11 compatible - use request method
+        $result = $DB->request([
+            'FROM' => $settingTableConfig,
+            'WHERE' => ['profile_id' => $profileId]
+        ]);
+        
+        $settingsArray = iterator_to_array($result);
         PluginRoundRobinLogger::addDebug(__METHOD__ . " - profile_id: $profileId results: " . var_export($settingsArray, true));
         return count($settingsArray) === 1 ? $settingsArray[0]['hasTypeAsCategory'] : null;
     }
@@ -94,3 +93,5 @@ EOT;
     }
 
 }
+
+

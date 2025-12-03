@@ -1,2 +1,5 @@
-# roundrobin
-GLPI - Automatic Round Robin Assignment in ticket by selected category
+# AJAX
+
+This directory contains AJAX handlers for the RoundRobin plugin.
+
+

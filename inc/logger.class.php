@@ -39,38 +39,53 @@ class PluginRoundRobinLogger {
     protected static $EMERGENCY = 600;
 
     /**
+     * GLPI 11 compatible logging
+     * Uses Toolbox::logInFile when available
      * 
-     * @global Logger $PHPLOGGER
      * @param int $type
      * @param string $message
      * @param array $details
      */
     protected static function add($type, $message, $details = []) {
-        global $PHPLOGGER;
-        switch ($type) {
-            case self::$DEBUG:
-                $recordType = Monolog\Logger::DEBUG;
-                break;
-            case self::$INFO:
-                $recordType = Monolog\Logger::INFO;
-                break;
-            case self::$NOTICE:
-                $recordType = Monolog\Logger::NOTICE;
-                break;
-            case self::$WARNING:
-                $recordType = Monolog\Logger::WARNING;
-                break;
-            case self::$ERROR:
-                $recordType = Monolog\Logger::ERROR;
-                break;
-            case self::$CRITICAL:
-                $recordType = Monolog\Logger::CRITICAL;
-                break;
-            default:
-                $recordType = Monolog\Logger::INFO;
-                break;
+        // Build log message
+        $logMessage = $message;
+        if (!empty($details)) {
+            $logMessage .= ' - ' . print_r($details, true);
         }
-        $PHPLOGGER->addRecord($recordType, $message, $details);
+        
+        // Check if Toolbox class is available (GLPI loaded)
+        if (!class_exists('Toolbox')) {
+            // GLPI not loaded yet, skip logging
+            return;
+        }
+        
+        try {
+            switch ($type) {
+                case self::$DEBUG:
+                    Toolbox::logInFile('roundrobin', 'DEBUG: ' . $logMessage);
+                    break;
+                case self::$INFO:
+                    Toolbox::logInFile('roundrobin', 'INFO: ' . $logMessage);
+                    break;
+                case self::$NOTICE:
+                    Toolbox::logInFile('roundrobin', 'NOTICE: ' . $logMessage);
+                    break;
+                case self::$WARNING:
+                    Toolbox::logInFile('roundrobin', 'WARNING: ' . $logMessage);
+                    break;
+                case self::$ERROR:
+                    Toolbox::logInFile('php-errors', 'RoundRobin ERROR: ' . $logMessage);
+                    break;
+                case self::$CRITICAL:
+                    Toolbox::logInFile('php-errors', 'RoundRobin CRITICAL: ' . $logMessage);
+                    break;
+                default:
+                    Toolbox::logInFile('roundrobin', $logMessage);
+                    break;
+            }
+        } catch (Exception $e) {
+            // Silently fail if logging fails
+        }
     }
 
     public static function addDebug($message, $details = []) {

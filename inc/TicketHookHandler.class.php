@@ -27,7 +27,8 @@
  * @link      https://github.com/initiativa/roundrobin
  * -------------------------------------------------------------------------
  */
-require_once 'IHookItemHandler.php';
+
+// Dependencies are loaded by hook.php
 
 class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRoundRobinHookItemHandler {
 
@@ -48,7 +49,8 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
         }
         PluginRoundRobinLogger::addDebug(__METHOD__ . " - TicketId: " . $this->getTicketId($item));
         PluginRoundRobinLogger::addDebug(__METHOD__ . " - CategoryId: " . $this->getTicketCategory($item));
-        $this->assignTicket($item);
+        // In GLPI 11, assignment is done via _actors in pre_item_add hook
+        // This method is kept for compatibility but assignment already happened
     }
 
     protected function getTicketId(CommonDBTM $item) {
@@ -59,82 +61,98 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
         return $item->fields['itilcategories_id'];
     }
 
+    /**
+     * Get group members for a category - GLPI 11 compatible using DB->request()
+     */
     public function getGroupsUsersByCategory($categoryId) {
-        $sql = <<< EOT
-                SELECT 
-                    c.name AS Category,
-                    c.completename AS CategoryCompleteName,
-                    g.name AS 'Group',
-                    gu.id AS UserGroupId,
-                    gu.users_id AS UserId,
-                    u.name AS Username,
-                    u.firstname AS UserFirstname,
-                    u.realname AS UserRealname
-                FROM
-                    glpi_itilcategories c
-                        JOIN
-                    glpi_groups g ON c.groups_id = g.id
-                        JOIN
-                    glpi_groups_users gu ON gu.groups_id = g.id
-                        JOIN
-                    glpi_users u ON gu.users_id = u.id
-                WHERE
-                    c.id = {$categoryId}
-                ORDER BY gu.id ASC
-EOT;
-        $resultCollection = $this->DB->queryOrDie($sql, $this->DB->error());
-        $resultArray = iterator_to_array($resultCollection);
+        // Get category group
+        $categoryResult = $this->DB->request([
+            'SELECT' => ['c.id', 'c.name', 'c.completename', 'c.groups_id'],
+            'FROM' => 'glpi_itilcategories AS c',
+            'WHERE' => ['c.id' => (int)$categoryId]
+        ]);
+        
+        $categoryData = $categoryResult->current();
+        if (!$categoryData || empty($categoryData['groups_id'])) {
+            return [];
+        }
+        
+        $groupId = $categoryData['groups_id'];
+        
+        // Get group info
+        $groupResult = $this->DB->request([
+            'SELECT' => ['id', 'name'],
+            'FROM' => 'glpi_groups',
+            'WHERE' => ['id' => (int)$groupId]
+        ]);
+        
+        $groupData = $groupResult->current();
+        if (!$groupData) {
+            return [];
+        }
+        
+        // Get group users - filter only active users
+        $usersResult = $this->DB->request([
+            'SELECT' => [
+                'gu.id AS UserGroupId',
+                'gu.users_id AS UserId',
+                'u.name AS Username',
+                'u.firstname AS UserFirstname',
+                'u.realname AS UserRealname'
+            ],
+            'FROM' => 'glpi_groups_users AS gu',
+            'INNER JOIN' => [
+                'glpi_users AS u' => [
+                    'ON' => [
+                        'gu' => 'users_id',
+                        'u' => 'id'
+                    ]
+                ]
+            ],
+            'WHERE' => [
+                'gu.groups_id' => (int)$groupId,
+                'u.is_active' => 1,
+                'u.is_deleted' => 0
+            ],
+            'ORDER' => 'gu.id ASC'
+        ]);
+        
+        $resultArray = [];
+        foreach ($usersResult as $row) {
+            $row['Category'] = $categoryData['name'];
+            $row['CategoryCompleteName'] = $categoryData['completename'];
+            $row['Group'] = $groupData['name'];
+            $resultArray[] = $row;
+        }
+        
         PluginRoundRobinLogger::addDebug(__METHOD__ . ' - result array: ', $resultArray);
         return $resultArray;
     }
 
-    protected function assignTicket(CommonDBTM $item) {
-        $itilcategoriesId = $this->getTicketCategory($item);
-        if (($lastAssignmentIndex = $this->getLastAssignmentIndex($item)) === false) {
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
-            return;
-        }
-        $categoryGroupMembers = $this->getGroupsUsersByCategory($this->getTicketCategory($item));
-        if (count($categoryGroupMembers) === 0) {
-            /**
-             * category w/o group, or group w/o users
-             */
-            return;
-        }
-        $newAssignmentIndex = isset($lastAssignmentIndex) ? $lastAssignmentIndex + 1 : 0;
-        /**
-         * round robin
-         */
-        if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-            $newAssignmentIndex = $newAssignmentIndex % count($categoryGroupMembers);
-            if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-                $newAssignmentIndex = 0;
-            }
-        }
-        $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
-
-        /**
-         * set the assignment
-         */
-        $ticketId = $this->getTicketId($item);
-        $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
-        $this->setAssignment($ticketId, $userId, $itilcategoriesId);
-        return $userId;
-    }
-
+    /**
+     * Find user to assign for a category - returns array with user_id and optionally group_id
+     * GLPI 11 compatible - returns data for _actors array
+     * 
+     * @param int $itilcategoriesId
+     * @param bool $storeChoice Whether to update the last assignment index
+     * @return array|null Array with 'user_id' and 'group_id' keys, or null if no assignment
+     */
     public function findUserIdToAssign(int $itilcategoriesId, bool $storeChoice = true) {
         if (($lastAssignmentIndex = $this->getLastAssignmentIndexId($itilcategoriesId)) === false) {
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to do (category is disabled or not configured; getLastAssignmentIndex: ' . var_export($lastAssignmentIndex, true));
             return null;
         }
+        
         $categoryGroupMembers = $this->getGroupsUsersByCategory($itilcategoriesId);
         if (count($categoryGroupMembers) === 0) {
             /**
              * category w/o group, or group w/o users
              */
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - no group members found for category: ' . $itilcategoriesId);
             return null;
         }
-        $newAssignmentIndex = isset($lastAssignmentIndex) ? $lastAssignmentIndex + 1 : 0;
+        
+        $newAssignmentIndex = isset($lastAssignmentIndex) && $lastAssignmentIndex !== null ? $lastAssignmentIndex + 1 : 0;
         /**
          * round robin
          */
@@ -150,61 +168,28 @@ EOT;
         }
 
         $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
-        return $userId;
+        
+        // Check if group should also be assigned
+        $groupId = null;
+        if ($this->rrAssignmentsEntity->getOptionAutoAssignGroup() === 1) {
+            $groupId = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
+        }
+        
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - assigned user_id: ' . $userId . ', group_id: ' . var_export($groupId, true));
+        
+        return [
+            'user_id' => $userId,
+            'group_id' => $groupId
+        ];
     }
 
     protected function getLastAssignmentIndexId(int $categoryId) {
         return $this->rrAssignmentsEntity->getLastAssignmentIndex($categoryId);
     }
 
-
     protected function getLastAssignmentIndex(CommonDBTM $item) {
         $itilcategoriesId = $this->getTicketCategory($item);
         return $this->rrAssignmentsEntity->getLastAssignmentIndex($itilcategoriesId);
-    }
-
-    protected function setAssignment($ticketId, $userId, $itilcategoriesId) {
-        /**
-         * remove any prevous user assignment
-         */
-        $sqlDelete_glpi_tickets_users = <<< EOT
-            DELETE FROM glpi_tickets_users 
-            WHERE tickets_id = {$ticketId};
-EOT;
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlDelete_glpi_tickets_users: ' . $sqlDelete_glpi_tickets_users);
-        $this->DB->queryOrDie($sqlDelete_glpi_tickets_users, $this->DB->error());
-
-        /**
-         * remove any previous group assignment
-         */
-        $sqlDelete_glpi_groups_tickets = <<< EOT
-            DELETE FROM glpi_groups_tickets 
-            WHERE tickets_id = {$ticketId};
-EOT;
-
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlDelete_glpi_groups_tickets: ' . $sqlDelete_glpi_groups_tickets);
-        $this->DB->queryOrDie($sqlDelete_glpi_groups_tickets, $this->DB->error());
-
-        /**
-         * insert the new assignment, based on rr
-         */
-        $sqlInsert_glpi_tickets_users = <<< EOT
-                    INSERT INTO glpi_tickets_users (tickets_id, users_id, type, use_notification) VALUES ({$ticketId}, {$userId}, 2, 0)
-EOT;
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlInsert_glpi_tickets_users: ' . $sqlInsert_glpi_tickets_users);
-        $this->DB->queryOrDie($sqlInsert_glpi_tickets_users, $this->DB->error());
-
-        /**
-         * if auto group assign is enabled assign the group too
-         */
-        if ($this->rrAssignmentsEntity->getOptionAutoAssignGroup() === 1) {
-            $groups_id = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
-            $sqlInsert_glpi_tickets_groups = <<< EOT
-                    INSERT INTO glpi_groups_tickets (tickets_id, groups_id, type) VALUES ({$ticketId}, {$groups_id}, 2)
-EOT;
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlInsert_glpi_tickets_groups: ' . $sqlInsert_glpi_tickets_groups);
-            $this->DB->queryOrDie($sqlInsert_glpi_tickets_groups, $this->DB->error());
-        }
     }
 
     public function itemPurged(CommonDBTM $item) {

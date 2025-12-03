@@ -27,12 +27,13 @@
  * @link      https://github.com/initiativa/roundrobin
  * -------------------------------------------------------------------------
  */
-include ('../../../inc/includes.php');
-require_once 'config.class.php';
-require_once 'RRAssignmentsEntity.class.php';
+
+// Include dependencies from same directory using __DIR__
+require_once __DIR__ . '/config.class.php';
+require_once __DIR__ . '/logger.class.php';
+require_once __DIR__ . '/RRAssignmentsEntity.class.php';
+
 use Glpi\Application\View\TemplateRenderer;
-use Session;
-use Translate;
 
 
 class PluginRoundRobinSettings extends CommonDBTM {

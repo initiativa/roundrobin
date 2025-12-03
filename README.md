@@ -8,4 +8,12 @@ The plugin adapt its behavior when the group or the members are changed.
 
 While setting up the plugin you can decide the categories for which the plugin should work and if adding also the same group as assignee (useful to allow other technicians to manage the queue in case of absence for example).
 
+## GLPI 11 Compatibility
+
+Version 2.0.0 adds support for GLPI 11.x:
+- Updated to use GLPI 11 actor system (`_actors` array) for ticket assignment
+- Uses GLPI's DB framework methods instead of raw SQL queries
+- Compatible with PHP 8.1+
+- Uses Twig templates for configuration form
+
 enjoy!
