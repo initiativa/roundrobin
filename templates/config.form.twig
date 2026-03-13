@@ -1,13 +1,6 @@
-{% extends 'layout/page.html.twig' %}
-
-{% block content_title %}
-    {{ __('RoundRobin Settings', 'roundrobin') }}
-{% endblock %}
-
-{% block content %}
 <div class="container-fluid ps-0">
 
-    {# ── Global option ─────────────────────────────────────────────────────── #}
+    {# ── Global option ──────────────────────────────────────────────────────── #}
     <div class="card mb-3">
         <div class="card-header">
             <h5 class="card-title mb-0">
@@ -21,7 +14,7 @@
                 <input type="hidden" name="action" value="save_options">
 
                 <div class="d-flex align-items-center gap-3">
-                    <label class="form-label mb-0 fw-semibold">
+                    <label class="form-label mb-0 fw-semibold" for="auto_assign_group">
                         {{ __('Assign also to the original Group:', 'roundrobin') }}
                     </label>
                     <div class="form-check form-switch mb-0">
@@ -48,7 +41,7 @@
         </div>
     </div>
 
-    {# ── Category table ─────────────────────────────────────────────────────── #}
+    {# ── Per-category table ─────────────────────────────────────────────────── #}
     <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <h5 class="card-title mb-0">
@@ -84,14 +77,14 @@
                             <tbody>
                                 {% for row in settings %}
                                     <tr class="{{ row.is_active ? '' : 'text-muted' }}">
+
                                         <td>
                                             <input type="hidden"
-                                                   name="itilcategories_id_{{ row.id }}"
+                                                   name="itilcategories_id_{{ row.id|e }}"
                                                    value="{{ row.itilcategories_id|e }}">
-                                            <span title="{{ row.category_name|e }}">
-                                                {{ row.category_name|e }}
-                                            </span>
+                                            {{ row.category_name|e }}
                                         </td>
+
                                         <td>
                                             {% if row.group_name %}
                                                 <span class="badge bg-info text-dark">
@@ -99,37 +92,41 @@
                                                     {{ row.group_name|e }}
                                                 </span>
                                             {% else %}
-                                                <span class="text-muted fst-italic">
+                                                <em class="text-muted">
                                                     {{ __('No group assigned', 'roundrobin') }}
-                                                </span>
+                                                </em>
                                             {% endif %}
                                         </td>
+
                                         <td class="text-center">
-                                            {% if row.group_name %}
+                                            {% if row.group_name is not null %}
                                                 <span class="badge {{ row.num_group_members > 0 ? 'bg-success' : 'bg-warning text-dark' }}">
-                                                    {{ row.num_group_members }}
+                                                    {{ row.num_group_members|e }}
                                                 </span>
                                             {% else %}
                                                 <span class="text-muted">—</span>
                                             {% endif %}
                                         </td>
+
                                         <td class="text-center">
-                                            {% if row.group_name and row.num_group_members > 0 %}
+                                            {% if row.group_name is not null and row.num_group_members > 0 %}
                                                 <div class="form-check form-switch d-flex justify-content-center mb-0">
                                                     <input class="form-check-input"
                                                            type="checkbox"
                                                            role="switch"
-                                                           id="is_active_{{ row.id }}"
-                                                           name="is_active_{{ row.id }}"
+                                                           id="is_active_{{ row.id|e }}"
+                                                           name="is_active_{{ row.id|e }}"
                                                            value="1"
                                                            {{ row.is_active ? 'checked' : '' }}>
                                                 </div>
                                             {% else %}
-                                                <span class="text-muted" title="{{ __('Requires a group with at least one member', 'roundrobin') }}">
+                                                <span class="text-muted"
+                                                      title="{{ __('Requires a group with at least one active member', 'roundrobin') }}">
                                                     <i class="ti ti-ban"></i>
                                                 </span>
                                             {% endif %}
                                         </td>
+
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -147,9 +144,9 @@
                         </button>
                     </div>
                 {% endif %}
+
             </form>
         </div>
     </div>
 
 </div>
-{% endblock %}
