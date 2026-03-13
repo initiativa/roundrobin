@@ -45,41 +45,30 @@ class PluginRoundRobinConfig {
     public static function init() {
         PluginRoundRobinLogger::addDebug(__METHOD__ . ' - defining hooks handlers');
         global $PLUGIN_HOOKS;
+
         $PLUGIN_HOOKS['csrf_compliant'][self::$PLUGIN_ROUNDROBIN_CODE] = true;
-        /**
-         * hooks declarations
-         */
+
+        // Assignment is done entirely in pre_item_add via $item->input['_actors'].
+        // No item_add hook needed for Ticket — it would fire after actors are
+        // persisted and cause duplicates.
         $PLUGIN_HOOKS['pre_item_add'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-            'Ticket' => 'plugin_roundrobin_hook_pre_item_add_handler'
+            'Ticket' => 'plugin_roundrobin_hook_pre_item_add_handler',
         ];
 
+        // Keep ITILCategory item_add to register new categories automatically.
         $PLUGIN_HOOKS['item_add'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-            'Ticket' => 'plugin_roundrobin_hook_item_add_handler',
             'ITILCategory' => 'plugin_roundrobin_hook_itil_item_add_handler',
         ];
 
-        // $PLUGIN_HOOKS['item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-        //     'Ticket' => 'plugin_roundrobin_hook_item_update_handler'
-        // ];
-
-        // $PLUGIN_HOOKS['pre_item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-        //     'Ticket' => 'plugin_roundrobin_hook_item_pre_update_handler'
-        // ];
-
-        // $PLUGIN_HOOKS['pre_item_delete'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-        //     'Ticket' => 'plugin_roundrobin_hook_pre_item_delete_handler'
-        // ];
-
         $PLUGIN_HOOKS['item_delete'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-            'Ticket' => 'plugin_roundrobin_hook_item_delete_handler',
-            'ITILCategory' => 'plugin_roundrobin_hook_item_delete_handler'
-        ];
-        
-        $PLUGIN_HOOKS['item_purge'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-            'Ticket' => 'plugin_roundrobin_hook_item_purge_handler',
-            'ITILCategory' => 'plugin_roundrobin_hook_item_purge_handler'
+            'Ticket'       => 'plugin_roundrobin_hook_item_delete_handler',
+            'ITILCategory' => 'plugin_roundrobin_hook_item_delete_handler',
         ];
 
+        $PLUGIN_HOOKS['item_purge'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'Ticket'       => 'plugin_roundrobin_hook_item_purge_handler',
+            'ITILCategory' => 'plugin_roundrobin_hook_item_purge_handler',
+        ];
     }
 
     public static function getVersion() {
