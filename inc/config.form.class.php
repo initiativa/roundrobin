@@ -28,13 +28,11 @@
  * -------------------------------------------------------------------------
  */
 
-// Include dependencies from same directory using __DIR__
 require_once __DIR__ . '/config.class.php';
 require_once __DIR__ . '/logger.class.php';
 require_once __DIR__ . '/RRAssignmentsEntity.class.php';
 
 use Glpi\Application\View\TemplateRenderer;
-
 
 class PluginRoundRobinSettings extends CommonDBTM {
 
@@ -42,61 +40,75 @@ class PluginRoundRobinSettings extends CommonDBTM {
         PluginRoundRobinLogger::addDebug(__METHOD__ . ' - constructor called');
     }
 
+    /**
+     * Render the configuration page.
+     * Access control is already enforced in front/config.form.php via
+     * Session::checkRight(). This method only handles rendering.
+     */
     public function showFormRoundRobin() {
-        global $CFG_GLPI, $DB;
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - displaying config form');
 
-        if (self::checkCentralInterface()) {
-            PluginRoundRobinLogger::addDebug(__METHOD__ . ' - display contents');
-            self::displayContent();
-        } else {
-            echo "<div align='center'><br><img src='" . $CFG_GLPI['root_doc'] . "/pics/warning.png'><br>" . __("Access denied") . "</div>";
-        }
-    }
-
-    public static function checkCentralInterface() {
-        $currentInterface = Session::getCurrentInterface();
-        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - current interface: ' . $currentInterface);
-        return $currentInterface === 'central';
-    }
-
-    public static function displayContent() {
-        $twig = TemplateRenderer::getInstance();
-        $twig->display('@roundrobin/config.form.twig', [
-            'csrf_token' => Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken()]),
-            'auto_assign_group' => self::getAutoAssignGoup(),
-            'centralInterfaceCheck' => self::checkCentralInterface(),
-            'settings' => self::getSettings()
+        TemplateRenderer::getInstance()->display('@roundrobin/config.form.twig', [
+            'csrf_token'        => Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken()]),
+            'auto_assign_group' => self::getAutoAssignGroup(),
+            'settings'          => self::getSettings(),
         ]);
-        
     }
 
-    protected static function getSettings() {
-        $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
-        return $rrAssignmentsEntity->getAll();
+    // -------------------------------------------------------------------------
+    // Data
+    // -------------------------------------------------------------------------
+
+    protected static function getSettings(): array {
+        return (new PluginRoundRobinRRAssignmentsEntity())->getAll();
     }
 
-    protected static function getAutoAssignGoup() {
-        $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
-        return $rrAssignmentsEntity->getOptionAutoAssignGroup();
+    protected static function getAutoAssignGroup(): int {
+        return (new PluginRoundRobinRRAssignmentsEntity())->getOptionAutoAssignGroup();
     }
 
-    public static function saveSettings() {
-        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - POST: ' . print_r($_POST, true));
-        $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
+    // -------------------------------------------------------------------------
+    // Save
+    // -------------------------------------------------------------------------
 
-        /**
-         * save option(s)
-         */
-        $rrAssignmentsEntity->updateAutoAssignGroup($_POST['auto_assign_group']);
+    /**
+     * Persist configuration from POST data.
+     *
+     * Two independent actions are dispatched by the template:
+     *   action=save_options    → only the global auto_assign_group toggle
+     *   action=save_categories → all per-category is_active switches
+     *
+     * Falls back to saving everything if action is absent (BC).
+     */
+    public static function saveSettings(): void {
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - saving, action: ' . ($_POST['action'] ?? 'all'));
 
-        /**
-         * save all assignments
-         */
-        foreach (self::getSettings() as $row) {
-            $itilCategoryId = $_POST["itilcategories_id_{$row['id']}"];
-            $newValue = $_POST["is_active_{$row['id']}"];
-            $rrAssignmentsEntity->updateIsActive($itilCategoryId, $newValue);
+        $entity = new PluginRoundRobinRRAssignmentsEntity();
+        $action = $_POST['action'] ?? 'all';
+
+        if ($action === 'save_options' || $action === 'all') {
+            // Checkbox unchecked → key absent from POST → default 0
+            $autoAssignGroup = isset($_POST['auto_assign_group']) ? 1 : 0;
+            $entity->updateAutoAssignGroup($autoAssignGroup);
+        }
+
+        if ($action === 'save_categories' || $action === 'all') {
+            foreach (self::getSettings() as $row) {
+                $rowId = (int) $row['id'];
+
+                // Validate that the POSTed category ID matches what we expect
+                $postedCategoryId = (int) ($_POST["itilcategories_id_{$rowId}"] ?? 0);
+                if ($postedCategoryId !== (int) $row['itilcategories_id']) {
+                    PluginRoundRobinLogger::addDebug(
+                        __METHOD__ . " - skipping row {$rowId}: category ID mismatch"
+                    );
+                    continue;
+                }
+
+                // Checkbox unchecked → key absent from POST → 0
+                $isActive = isset($_POST["is_active_{$rowId}"]) ? 1 : 0;
+                $entity->updateIsActive($postedCategoryId, $isActive);
+            }
         }
     }
-
 }

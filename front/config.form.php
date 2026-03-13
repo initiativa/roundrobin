@@ -28,44 +28,38 @@
  * -------------------------------------------------------------------------
  */
 
-// GLPI 11 - include GLPI core
 include('../../../inc/includes.php');
 
-// Include plugin classes using __DIR__
 require_once __DIR__ . '/../inc/logger.class.php';
 require_once __DIR__ . '/../inc/config.class.php';
 require_once __DIR__ . '/../inc/RRAssignmentsEntity.class.php';
 require_once __DIR__ . '/../inc/config.form.class.php';
 
-// Check rights
+// Require GLPI admin rights to access this page
 Session::checkRight('config', READ);
 
-/**
- * render menu bar
- */
-Html::header('RoundRobin Settings', $_SERVER['PHP_SELF'], "plugins", PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_CODE, "config");
+Html::header(
+    __('RoundRobin Settings', 'roundrobin'),
+    $_SERVER['PHP_SELF'],
+    'plugins',
+    PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_CODE,
+    'config'
+);
 
-$pluginRoundRobinConfigForm = new PluginRoundRobinSettings();
+$form = new PluginRoundRobinSettings();
 
-/**
- * check for post form data and perform requested action
- */
-if (isset($_REQUEST['save'])) {
-    PluginRoundRobinLogger::addDebug(__FILE__ . ' - SAVE: POST: ', $_POST);
-    $pluginRoundRobinConfigForm::saveSettings();
-    Session::AddMessageAfterRedirect('Config saved');
+if (isset($_POST['save'])) {
+    // CSRF is validated by GLPI core before reaching this point
+    PluginRoundRobinLogger::addDebug(__FILE__ . ' - SAVE action: ' . ($_POST['action'] ?? 'all'));
+    $form::saveSettings();
+    Session::addMessageAfterRedirect(
+        __('Configuration saved successfully.', 'roundrobin'),
+        true,
+        INFO
+    );
     Html::back();
 }
 
-if (isset($_REQUEST['cancel'])) {
-    PluginRoundRobinLogger::addDebug(__FILE__ . ' - CANCEL: POST: ', $_POST);
-    Session::AddMessageAfterRedirect('Config reset');
-    Html::back();
-}
-
-/**
- * then render current configuration
- */
-$pluginRoundRobinConfigForm->showFormRoundRobin();
+$form->showFormRoundRobin();
 
 Html::footer();
