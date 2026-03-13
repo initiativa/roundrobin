@@ -349,15 +349,20 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
      *             Kept so any external code that calls this still works.
      */
     public function getLastAssignmentIndex($itilcategoriesId) {
+        // Category must be active for RR
+        if (!$this->isActiveForCategory((int) $itilcategoriesId)) {
+            return false;
+        }
         $groupId = $this->getGroupByItilCategory($itilcategoriesId);
         if ($groupId === false) {
             return false;
         }
-        // A category that is not active should return false
-        if (!$this->isActiveForCategory((int) $itilcategoriesId)) {
-            return false;
+        $index = $this->getLastAssignmentIndexByGroup($groupId);
+        // false = no row in rr_groups yet → first assignment → start at 0
+        if ($index === false) {
+            return null;
         }
-        return $this->getLastAssignmentIndexByGroup($groupId);
+        return $index;
     }
 
     /**
