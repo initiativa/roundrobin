@@ -1,5 +1,29 @@
 # Changelog - RoundRobin Plugin
 
+## [Unreleased] - dev/glpi-11
+ 
+### Fixed
+- **Critical:** `init()` no longer calls `TRUNCATE` on existing tables during
+  plugin install/upgrade. Previous behavior wiped all `is_active` settings
+  every time the plugin was reinstalled or updated. Replaced with idempotent
+  `syncCategories()` that inserts missing categories and removes orphaned rows
+  while leaving existing configuration intact.
+- **Bug:** Removed empty `item_add` hook registration for `Ticket`. The hook
+  callback was a no-op after the GLPI 11 migration (assignment moved to
+  `pre_item_add` via `_actors`), but the registration could cause confusion
+  and double-processing in edge cases.
+- **Performance:** `getAll()` now uses a single LEFT JOIN query + one bulk
+  `COUNT` query instead of N+1 sequential requests (one per category + one
+  per group + one per member count). Significant improvement for
+  installations with many ITIL categories.
+- **Bug:** Normalized line endings in `TicketHookHandler.class.php` from
+  Windows CRLF to LF, consistent with the rest of the project.
+ 
+### Added
+- Spanish (Spain) locale `es_ES` — full translation of all UI strings.
+- Updated `roundrobin.pot` template with previously missing strings:
+  `No group assigned`, `Config saved`, `Config reset`.
+
 ## [2.1.0] - 2025-01-14
 
 ### 🎉 GLPI 11 Compatibility - Complete Rewrite
