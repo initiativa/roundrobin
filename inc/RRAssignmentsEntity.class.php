@@ -421,17 +421,22 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             }
         }
 
-        // Member counts in a single query
+        // Member counts in a single raw query.
+        // GLPI's ORM backticks every SELECT element, breaking COUNT(id) syntax,
+        // so we use doQuery() directly here.
         if (!empty($groupIds)) {
-            $counts   = $this->DB->request([
-                'SELECT' => ['groups_id', 'COUNT(id) AS cnt'],
-                'FROM'   => 'glpi_groups_users',
-                'WHERE'  => ['groups_id' => array_keys($groupIds)],
-                'GROUP'  => 'groups_id',
-            ]);
+            $ids      = implode(',', array_map('intval', array_keys($groupIds)));
+            $result   = $this->DB->doQuery(
+                "SELECT `groups_id`, COUNT(`id`) AS `cnt`
+                 FROM `glpi_groups_users`
+                 WHERE `groups_id` IN ({$ids})
+                 GROUP BY `groups_id`"
+            );
             $countMap = [];
-            foreach ($counts as $c) {
-                $countMap[(int) $c['groups_id']] = (int) $c['cnt'];
+            if ($result) {
+                while ($row = $this->DB->fetchAssoc($result)) {
+                    $countMap[(int) $row['groups_id']] = (int) $row['cnt'];
+                }
             }
             foreach ($resultArray as &$e) {
                 if ($e['groups_id'] > 0) {
