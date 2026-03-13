@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root>
-    <name>RoundRobin</name>
+    <n>RoundRobin</n>
     <key>roundrobin</key>
     <state>stable</state>
     <logo>https://raw.githubusercontent.com/initiativa/roundrobin/master/pics/roundrobin-logo.png</logo>
     <description>
         <short>
-            <en>This plugin allow the assignation of a ticket using a roundrobin policy.</en>
-            <it>Questo plugin permette l'assegnazione di un ticket ad un tecnico utilizzando una politica di roundrobin.</it>
+            <en>Automatically assigns tickets to technicians using a fair round-robin policy per group.</en>
+            <it>Assegna automaticamente i ticket ai tecnici usando una politica round-robin equa per gruppo.</it>
+            <es>Asigna automáticamente los tickets a técnicos usando una política round-robin equitativa por grupo.</es>
+            <de>Weist Tickets automatisch Technikern nach einer fairen Round-Robin-Richtlinie pro Gruppe zu.</de>
+            <fr>Assigne automatiquement les tickets aux techniciens selon une politique round-robin équitable par groupe.</fr>
         </short>
         <long>
-            <en>This plugin allow the assignation of a ticket using a roundrobin policy. It considers "the group in charge of the hardware" linked to a category to get the member of the group and assigning a ticket to one of them using a roundrobin policy.</en>
-            <it>Questo plugin permette l'assegnazione di un ticket ad un tecnico utilizzando una politica di roundrobin. Il plugin valuta il gruppo indicato nel campo "gruppo incaricato dell'hardware" nelle varie categorie, ed assegna il ticket ad uno dei membri del gruppo, ruotnado i membri ad goni nuovo ticket con una politica di tipo roundrobin</it>
+            <en>RoundRobin distributes incoming tickets evenly among technicians within a group. Link an ITIL category to a GLPI group, enable round-robin for that category, and every new ticket will be assigned to the next available technician in rotation. The rotation counter is shared across all categories that use the same group, ensuring truly fair distribution even when tickets arrive through different categories. Inactive or deleted users are automatically skipped. Optionally, the group itself can also be set as assignee alongside the individual technician.</en>
+            <it>RoundRobin distribuisce i ticket in arrivo in modo uniforme tra i tecnici di un gruppo. Collega una categoria ITIL a un gruppo GLPI, abilita il round-robin per quella categoria e ogni nuovo ticket verrà assegnato al tecnico successivo in rotazione. Il contatore di rotazione è condiviso tra tutte le categorie che usano lo stesso gruppo, garantendo una distribuzione equa anche quando i ticket arrivano da categorie diverse. Gli utenti inattivi o eliminati vengono automaticamente ignorati.</it>
+            <es>RoundRobin distribuye los tickets entrantes de forma equitativa entre los técnicos de un grupo. Vincula una categoría ITIL a un grupo GLPI, habilita el round-robin para esa categoría y cada nuevo ticket será asignado al siguiente técnico en rotación. El contador de rotación es compartido entre todas las categorías que usan el mismo grupo, garantizando una distribución verdaderamente justa incluso cuando los tickets llegan por diferentes categorías. Los usuarios inactivos o eliminados se omiten automáticamente.</es>
+            <fr>RoundRobin distribue les tickets entrants de façon équitable entre les techniciens d'un groupe. Liez une catégorie ITIL à un groupe GLPI, activez le round-robin pour cette catégorie et chaque nouveau ticket sera assigné au prochain technicien en rotation. Le compteur de rotation est partagé entre toutes les catégories utilisant le même groupe, garantissant une distribution vraiment équitable même lorsque les tickets arrivent par différentes catégories.</fr>
         </long>
     </description>
     <homepage>https://github.com/initiativa/roundrobin</homepage>
@@ -20,12 +25,14 @@
     <readme>https://raw.githubusercontent.com/initiativa/roundrobin/master/README.md</readme>
     <authors>
         <author>Andrea Caracciolo / initiativa srl</author>
+        <author>loulouontop</author>
+        <author>babydunet</author>
     </authors>
     <versions>
         <version>
-            <num>2.0.0</num>
+            <num>2.2.0</num>
             <compatibility>~11.0</compatibility>
-            <download_url>https://github.com/initiativa/roundrobin/releases/download/2.0.0/roundrobin-2.0.0.tar.gz</download_url>
+            <download_url>https://github.com/initiativa/roundrobin/releases/download/2.2.0/roundrobin-2.2.0.tar.gz</download_url>
         </version>
         <version>
             <num>1.0.9</num>
@@ -42,18 +49,43 @@
     </versions>
     <langs>
         <lang>en_GB</lang>
+        <lang>en_US</lang>
+        <lang>es_ES</lang>
+        <lang>de_DE</lang>
+        <lang>fr_FR</lang>
+        <lang>it_IT</lang>
+        <lang>pl_PL</lang>
     </langs>
     <license>GPL v3</license>
     <tags>
         <en>
-            <tag>Ticket</tag>
-            <tag>Helpdesk</tag>
-            <tag>Technician</tag>
+            <tag>ticket</tag>
+            <tag>helpdesk</tag>
+            <tag>technician</tag>
+            <tag>assignment</tag>
+            <tag>round-robin</tag>
+            <tag>automation</tag>
+            <tag>ITIL</tag>
         </en>
+        <es>
+            <tag>ticket</tag>
+            <tag>helpdesk</tag>
+            <tag>técnico</tag>
+            <tag>asignación</tag>
+            <tag>round-robin</tag>
+            <tag>automatización</tag>
+        </es>
         <it>
-            <tag>Chiamata</tag>
-            <tag>Assistenza</tag>
-            <tag>Tecnico</tag>
+            <tag>chiamata</tag>
+            <tag>assistenza</tag>
+            <tag>tecnico</tag>
+            <tag>assegnazione</tag>
         </it>
+        <fr>
+            <tag>ticket</tag>
+            <tag>helpdesk</tag>
+            <tag>technicien</tag>
+            <tag>assignation</tag>
+        </fr>
     </tags>
 </root>

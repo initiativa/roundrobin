@@ -1,257 +1,186 @@
-# RoundRobin Plugin - Installation & Configuration Guide
+# RoundRobin Plugin — Installation & Configuration Guide
 
-## 📋 What This Plugin Does
+## What this plugin does
 
-The RoundRobin plugin automatically assigns tickets to technicians in a fair, rotating pattern. When users create tickets with specific categories, the plugin automatically picks the next technician in line and assigns the ticket to them.
+RoundRobin automatically assigns new tickets to technicians in a rotating, fair order. When a ticket is created with an enabled ITIL category, the plugin picks the next technician from the category's group and assigns the ticket — no manual triage needed.
 
-**Example:**
-- You have 3 technicians: Alice, Bob, and Charlie
-- First ticket → Alice
-- Second ticket → Bob
-- Third ticket → Charlie
-- Fourth ticket → Alice (cycle repeats)
+The rotation counter is **shared per group**, not per category. This means that if you have two categories ("Hardware" and "Software") both linked to the "Support" group, tickets alternate fairly among all group members regardless of which category they come from.
 
 ---
 
-## ✅ Requirements
+## Requirements
 
-Before installing, make sure you have:
-- **GLPI Version:** 11.0.0 to 11.0.99
-- **PHP Version:** 8.1 or higher
-- **Database:** MySQL/MariaDB (already part of GLPI)
-- **User Permissions:** GLPI Administrator access
-
----
-
-## 📦 Installation Steps
-
-### Step 1: Upload the Plugin
-
-1. **Locate your GLPI plugins folder:**
-   - Usually: `/var/www/html/glpi/plugins/` (Linux)
-   - Or: `C:\xampp\htdocs\glpi\plugins\` (Windows)
-
-2. **Copy the `roundrobin` folder:**
-   ```
-   Copy the entire "roundrobin" folder into the plugins directory
-   ```
-
-3. **Set correct permissions (Linux only):**
-   ```bash
-   cd /var/www/html/glpi/plugins/
-   chown -R www-data:www-data roundrobin
-   chmod -R 755 roundrobin
-   ```
-
-### Step 2: Install the Plugin in GLPI
-
-1. **Log into GLPI** as an administrator
-
-2. **Navigate to:**
-   ```
-   Setup → Plugins
-   ```
-
-3. **Find "Round Robin"** in the list
-
-4. **Click "Install"**
-   - The plugin will create two database tables automatically
-   - All your existing ITIL categories will be imported
-
-5. **Click "Enable"**
-   - The plugin is now active
+| | |
+|---|---|
+| **GLPI** | 11.0.0 to 11.0.99 |
+| **PHP** | 8.1 or higher |
+| **Database** | MySQL / MariaDB (via GLPI) |
 
 ---
 
-## ⚙️ Configuration
+## Installation
 
-### Step 3: Configure Round-Robin Assignment
+### Step 1 — Upload the plugin
 
-1. **Go to the plugin settings:**
-   ```
-   Setup → Plugins → Round Robin → Click the wrench icon (Configure)
-   ```
+Copy the `roundrobin` folder into your GLPI plugins directory:
 
-2. **You'll see two main settings:**
+```
+/var/www/html/glpi/plugins/roundrobin/
+```
 
-#### Setting 1: Assign Group Too?
-   - **Question:** "Assign also to the original Group"
-   - **Options:**
-     - **Yes** (Recommended): The ticket gets assigned to BOTH the individual technician AND the group
-     - **No**: Only the individual technician is assigned
+On Linux, set correct ownership:
 
-   **When to choose Yes:** If you want other team members to see the ticket in their group queue
-   **When to choose No:** If you want only the assigned technician to handle it
+```bash
+chown -R www-data:www-data /var/www/html/glpi/plugins/roundrobin
+chmod -R 755 /var/www/html/glpi/plugins/roundrobin
+```
 
-#### Setting 2: Enable Categories
+### Step 2 — Install and enable in GLPI
 
-3. **For each ITIL Category, you'll see:**
-   - Category name (e.g., "Hardware → Laptop Issues")
-   - Group assigned to that category
-   - Number of members in that group
-   - **Enable/Disable switch**
-
-4. **Enable round-robin for specific categories:**
-   - Select **"Enabled"** for categories you want to use round-robin
-   - Select **"Disabled"** for categories where you DON'T want automatic assignment
-
-5. **Click "Save"**
+1. Log in as a GLPI administrator.
+2. Go to **Setup → Plugins**.
+3. Find **Round Robin** and click **Install**.
+   - Three database tables are created automatically.
+   - All existing ITIL categories are imported (disabled by default).
+4. Click **Enable**.
 
 ---
 
-## 🎯 How to Set Up Your First Category
+## Upgrading
 
-### Example: Laptop Issues
+### From version 1.0.x
 
-Let's say you want all laptop issues to be automatically assigned in round-robin fashion.
+> ⚠️ There is no automatic migration from 1.x. You must reinstall.
 
-#### Step 1: Create/Verify the Group
+1. Go to **Setup → Plugins** and click **Uninstall** on the old version.
+2. Replace the `roundrobin` folder with the new version.
+3. Click **Install → Enable**.
+4. Reconfigure your categories (see Configuration below).
 
-1. **Go to:** `Administration → Groups`
-2. **Create or select a group** (e.g., "Laptop Support Team")
-3. **Add technicians** to this group:
-   - Click the group name
-   - Go to "Users" tab
-   - Add Alice, Bob, and Charlie
+### From version 2.x
 
-#### Step 2: Link the Group to the ITIL Category
+Just replace the plugin files. The install routine is idempotent:
 
-1. **Go to:** `Setup → Dropdowns → ITIL Categories`
-2. **Find "Laptop Issues"** (or create it)
-3. **Edit the category**
-4. **Set "Group in charge of the hardware"** to "Laptop Support Team"
-5. **Save**
-
-#### Step 3: Enable Round-Robin for This Category
-
-1. **Go to:** `Setup → Plugins → Round Robin (Configure)`
-2. **Find "Laptop Issues"** in the table
-3. **You should see:**
-   - Category: "Laptop Issues"
-   - Group: "Laptop Support Team"
-   - Members: 3
-4. **Select "Enabled"**
-5. **Click "Save"**
-
-#### Step 4: Test It!
-
-1. **Create a test ticket:**
-   - Go to `Assistance → Create a ticket`
-   - Set Category to "Laptop Issues"
-   - Submit the ticket
-
-2. **Check the assignment:**
-   - Open the ticket
-   - Look at "Assigned to" → You should see one of your technicians!
-
-3. **Create another test ticket:**
-   - Same category
-   - The NEXT technician in the rotation should be assigned
+- Creates the new `rr_groups` table if it doesn't exist.
+- Migrates schema (drops legacy `last_assignment_index` column from assignments table).
+- **Never touches your existing `is_active` settings.**
 
 ---
 
-## 🔧 Troubleshooting
+## Configuration
 
-### Problem: Tickets aren't being assigned automatically
+### Step 1 — Link a group to an ITIL category
 
-**Check these things:**
+1. Go to **Setup → Dropdowns → ITIL Categories**.
+2. Edit the category you want to use with round-robin.
+3. Set the **"Group in charge of the hardware"** field to the group whose members should receive tickets.
+4. Save.
 
-1. **Is the plugin enabled?**
-   - `Setup → Plugins` → Round Robin should show "Enabled"
+Repeat for each category you want to enable.
 
-2. **Is the category enabled?**
-   - Go to plugin config
-   - Check if that specific category is set to "Enabled"
+### Step 2 — Open the plugin configuration
 
-3. **Does the category have a group?**
-   - `Setup → Dropdowns → ITIL Categories`
-   - Edit the category
-   - Check "Group in charge of the hardware" is set
+Go to **Setup → Plugins**, find **Round Robin**, and click the **wrench icon** (Configure).
 
-4. **Does the group have members?**
-   - `Administration → Groups`
-   - Open the group
-   - Check there are users in the "Users" tab
+You'll see two sections:
 
-5. **Are the users active?**
-   - Users must be active (not deleted or disabled)
-   - Check: `Administration → Users`
+#### Global options
 
-### Problem: Same person keeps getting assigned
+**Assign also to the original Group** (toggle)
 
-**Possible causes:**
-- Only one active user in the group
-- Other users are disabled/inactive
-- Check group membership
+| State | Behaviour |
+|---|---|
+| **On** (recommended) | Ticket is assigned to both the individual technician AND the group. Other team members can see it in the group queue. |
+| **Off** | Only the individual technician is assigned. |
 
-### Problem: Error when saving configuration
+Click **Save** after changing this option.
 
-**Possible causes:**
-- Permission issue
-- Make sure you're logged in as admin
-- Try: `Setup → General → Check → "Check database integrity"`
+#### Per-category table
 
-### Problem: Plugin won't install
+Each row shows an ITIL category with:
 
-**Check:**
-- GLPI version (must be 11.0.0 to 11.0.99)
-- PHP version (must be 8.1+)
-- Database connection is working
-- File permissions (Linux)
+| Column | Meaning |
+|---|---|
+| **ITIL Category** | Full category path. |
+| **Group** | The group linked to this category. Blue badge = group set. Grey italic = no group. |
+| **Members** | Active member count. Green badge = at least one member. Yellow = zero members. |
+| **Round Robin** | Toggle switch. Only available if the category has a group with at least one active member. |
+
+Enable the categories you want to use round-robin on, then click **Save**.
 
 ---
 
-## 📊 Understanding the Rotation
+## How rotation works
 
-### How It Works
+### Group-level counter
 
-The plugin remembers which technician was assigned last for each category.
+The plugin stores a single rotation index per **group**, shared across all categories that use that group.
 
-**Example with 3 technicians: Alice, Bob, Charlie**
+**Example:** 3 technicians (Alice, Bob, Charlie) in group "Support". Categories "Hardware" and "Software" both use this group.
 
-| Ticket # | Category | Assigned To | Reason |
-|----------|----------|-------------|--------|
-| 1 | Laptop Issues | Alice | First assignment |
-| 2 | Laptop Issues | Bob | Next in rotation |
-| 3 | Laptop Issues | Charlie | Next in rotation |
-| 4 | Laptop Issues | Alice | Back to start |
-| 5 | Printer Issues | Bob | Different category, has its own rotation |
+| Ticket | Category | Group counter | Assigned to |
+|---|---|---|---|
+| 1 | Hardware | 0 | Alice |
+| 2 | Software | 1 | Bob |
+| 3 | Hardware | 2 | Charlie |
+| 4 | Software | 0 | Alice |
+| 5 | Hardware | 1 | Bob |
 
-**Key Points:**
-- Each category has its own rotation
-- If someone is removed from the group, rotation adjusts automatically
-- If someone is added to the group, they'll be included in rotation
+Without group-level tracking, Alice would receive the first ticket from *every* category — this was a bug in earlier versions.
 
----
+### Active users only
 
-## 🔐 Security Notes
+The plugin queries only users where `is_active = 1` and `is_deleted = 0`. If a technician leaves or is deactivated, they are automatically skipped in the next rotation without any reconfiguration needed.
 
-- Only GLPI administrators can configure the plugin
-- The plugin respects all GLPI permission systems
-- All database operations are protected against SQL injection
-- CSRF tokens protect the configuration form
+### First assignment
+
+The first ticket to a group starts at index 0 (first member by `glpi_groups_users.id` order, which corresponds to the order they were added to the group).
 
 ---
 
-## 📞 Getting Help
+## Troubleshooting
 
-If you still have issues:
+### Tickets aren't being assigned
 
-1. **Check GLPI logs:**
-   - `files/_log/` directory
-   - Look for lines containing "RoundRobin"
+Work through this checklist:
 
-2. **Enable debug mode:**
-   - Edit `config/config_db.php`
-   - Look for debug settings
+1. **Plugin enabled?** — Setup → Plugins → Round Robin should show "Enabled".
+2. **Category enabled in plugin config?** — Check the per-category toggle is on.
+3. **Category has a group?** — Setup → Dropdowns → ITIL Categories → edit → "Group in charge of the hardware".
+4. **Group has active members?** — Administration → Groups → open group → Users tab. Members badge in plugin config shows the count.
+5. **Users are active?** — Administration → Users → check `is_active`.
 
-3. **GitHub Issues:**
-   - https://github.com/initiativa/roundrobin/issues
+### Same person keeps getting assigned
+
+- Only one active user in the group — add more members.
+- Other members may be inactive or deleted.
+
+### Configuration page shows "No group assigned" for all categories
+
+The ITIL category was not linked to a group. See Step 1 of Configuration above.
+
+### Checking logs
+
+```bash
+# GLPI debug log (if debug mode is on)
+tail -f /var/www/html/glpi/files/_log/php-errors.log | grep -i roundrobin
+```
+
+To enable debug logging for the plugin, set `$PLUGIN_ROUNDROBIN_ENV = 'development'` in `inc/config.class.php` (do not leave this on in production).
 
 ---
 
-## 🎉 You're Done!
+## Database reference
 
-Your RoundRobin plugin is now configured and ready to use. Every time a ticket is created with an enabled category, it will automatically be assigned to the next technician in rotation!
+| Table | Purpose |
+|---|---|
+| `glpi_plugin_roundrobin_rr_assignments` | One row per ITIL category. Stores `is_active`. |
+| `glpi_plugin_roundrobin_rr_groups` | One row per group. Stores `last_assignment_index`. |
+| `glpi_plugin_roundrobin_rr_options` | One row. Stores `auto_assign_group` global option. |
 
-**Pro Tip:** Start with one or two categories first, test thoroughly, then enable more categories once you're comfortable with how it works.
+---
+
+## Getting help
+
+- **GitHub Issues:** https://github.com/initiativa/roundrobin/issues
+- Include your GLPI version, PHP version, and any relevant log lines.
