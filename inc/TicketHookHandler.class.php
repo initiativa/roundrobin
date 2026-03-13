@@ -38,19 +38,14 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
     public function __construct() {
         global $DB;
 
-        $this->DB = $DB;
+        $this->DB                  = $DB;
         $this->rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
     }
 
     public function itemAdded(CommonDBTM $item) {
-        PluginRoundRobinLogger::addDebug(__METHOD__ . " - Item Type: " . $item->getType());
-        if ($item->getType() !== 'Ticket') {
-            return;
-        }
-        PluginRoundRobinLogger::addDebug(__METHOD__ . " - TicketId: " . $this->getTicketId($item));
-        PluginRoundRobinLogger::addDebug(__METHOD__ . " - CategoryId: " . $this->getTicketCategory($item));
-        // In GLPI 11, assignment is done via _actors in pre_item_add hook
-        // This method is kept for compatibility but assignment already happened
+        // In GLPI 11, assignment is done via _actors in pre_item_add.
+        // This method is intentionally a no-op.
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - assignment already handled in pre_item_add');
     }
 
     protected function getTicketId(CommonDBTM $item) {
@@ -62,135 +57,145 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
     }
 
     /**
-     * Get group members for a category - GLPI 11 compatible using DB->request()
+     * Return active members of the group linked to a category.
+     * Ordered by glpi_groups_users.id ASC for a stable, predictable rotation.
+     *
+     * @param  int   $categoryId
+     * @return array Each row has UserId, Username, UserFirstname, UserRealname,
+     *               UserGroupId, Category, CategoryCompleteName, Group.
      */
-    public function getGroupsUsersByCategory($categoryId) {
-        // Get category group
-        $categoryResult = $this->DB->request([
-            'SELECT' => ['c.id', 'c.name', 'c.completename', 'c.groups_id'],
-            'FROM' => 'glpi_itilcategories AS c',
-            'WHERE' => ['c.id' => (int)$categoryId]
+    public function getGroupsUsersByCategory(int $categoryId): array {
+        // Resolve category → group in one query
+        $catResult = $this->DB->request([
+            'SELECT' => ['id', 'name', 'completename', 'groups_id'],
+            'FROM'   => 'glpi_itilcategories',
+            'WHERE'  => ['id' => $categoryId],
+            'LIMIT'  => 1,
         ]);
-        
-        $categoryData = $categoryResult->current();
-        if (!$categoryData || empty($categoryData['groups_id'])) {
+
+        $catData = $catResult->current();
+        if (!$catData || empty($catData['groups_id'])) {
+            PluginRoundRobinLogger::addDebug(__METHOD__ . " - category {$categoryId} has no group");
             return [];
         }
-        
-        $groupId = $categoryData['groups_id'];
-        
-        // Get group info
-        $groupResult = $this->DB->request([
+
+        $groupId = (int) $catData['groups_id'];
+
+        $grpResult = $this->DB->request([
             'SELECT' => ['id', 'name'],
-            'FROM' => 'glpi_groups',
-            'WHERE' => ['id' => (int)$groupId]
+            'FROM'   => 'glpi_groups',
+            'WHERE'  => ['id' => $groupId],
+            'LIMIT'  => 1,
         ]);
-        
-        $groupData = $groupResult->current();
-        if (!$groupData) {
+
+        $grpData = $grpResult->current();
+        if (!$grpData) {
+            PluginRoundRobinLogger::addDebug(__METHOD__ . " - group {$groupId} not found");
             return [];
         }
-        
-        // Get group users - filter only active users
+
+        // Active, non-deleted users in the group
         $usersResult = $this->DB->request([
             'SELECT' => [
                 'gu.id AS UserGroupId',
                 'gu.users_id AS UserId',
                 'u.name AS Username',
                 'u.firstname AS UserFirstname',
-                'u.realname AS UserRealname'
+                'u.realname AS UserRealname',
             ],
-            'FROM' => 'glpi_groups_users AS gu',
+            'FROM'       => 'glpi_groups_users AS gu',
             'INNER JOIN' => [
                 'glpi_users AS u' => [
-                    'ON' => [
-                        'gu' => 'users_id',
-                        'u' => 'id'
-                    ]
-                ]
+                    'ON' => ['gu' => 'users_id', 'u' => 'id'],
+                ],
             ],
             'WHERE' => [
-                'gu.groups_id' => (int)$groupId,
-                'u.is_active' => 1,
-                'u.is_deleted' => 0
+                'gu.groups_id' => $groupId,
+                'u.is_active'  => 1,
+                'u.is_deleted' => 0,
             ],
-            'ORDER' => 'gu.id ASC'
+            'ORDER' => 'gu.id ASC',
         ]);
-        
-        $resultArray = [];
+
+        $members = [];
         foreach ($usersResult as $row) {
-            $row['Category'] = $categoryData['name'];
-            $row['CategoryCompleteName'] = $categoryData['completename'];
-            $row['Group'] = $groupData['name'];
-            $resultArray[] = $row;
+            $row['Category']             = $catData['name'];
+            $row['CategoryCompleteName'] = $catData['completename'];
+            $row['Group']                = $grpData['name'];
+            $members[]                   = $row;
         }
-        
-        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - result array: ', $resultArray);
-        return $resultArray;
+
+        PluginRoundRobinLogger::addDebug(__METHOD__ . " - found " . count($members) . " active members for group {$groupId}");
+        return $members;
     }
 
     /**
-     * Find user to assign for a category - returns array with user_id and optionally group_id
-     * GLPI 11 compatible - returns data for _actors array
-     * 
-     * @param int $itilcategoriesId
-     * @param bool $storeChoice Whether to update the last assignment index
-     * @return array|null Array with 'user_id' and 'group_id' keys, or null if no assignment
+     * Compute the next user to assign for a category using group-level rotation.
+     *
+     * All categories that share the same group advance the SAME counter, so
+     * distribution is fair regardless of which category the ticket arrives on.
+     *
+     * @param  int   $itilcategoriesId
+     * @param  bool  $storeChoice  Persist the new index (false = dry-run / preview)
+     * @return array|null  ['user_id' => int, 'group_id' => int|false] or null
      */
-    public function findUserIdToAssign(int $itilcategoriesId, bool $storeChoice = true) {
-        if (($lastAssignmentIndex = $this->getLastAssignmentIndexId($itilcategoriesId)) === false) {
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to do (category is disabled or not configured; getLastAssignmentIndex: ' . var_export($lastAssignmentIndex, true));
+    public function findUserIdToAssign(int $itilcategoriesId, bool $storeChoice = true): ?array {
+        // 1. Category must be active for RR
+        if (!$this->rrAssignmentsEntity->isActiveForCategory($itilcategoriesId)) {
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - category {$itilcategoriesId} is not active for RR");
             return null;
-        }
-        
-        $categoryGroupMembers = $this->getGroupsUsersByCategory($itilcategoriesId);
-        if (count($categoryGroupMembers) === 0) {
-            /**
-             * category w/o group, or group w/o users
-             */
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - no group members found for category: ' . $itilcategoriesId);
-            return null;
-        }
-        
-        $newAssignmentIndex = isset($lastAssignmentIndex) && $lastAssignmentIndex !== null ? $lastAssignmentIndex + 1 : 0;
-        /**
-         * round robin
-         */
-        if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-            $newAssignmentIndex = $newAssignmentIndex % count($categoryGroupMembers);
-            if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-                $newAssignmentIndex = 0;
-            }
         }
 
+        // 2. Resolve the group for this category
+        $groupId = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
+        if ($groupId === false) {
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - category {$itilcategoriesId} has no group");
+            return null;
+        }
+
+        // 3. Get active members (ordered by gu.id for stable rotation)
+        $members = $this->getGroupsUsersByCategory($itilcategoriesId);
+        if (empty($members)) {
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - no active members in group {$groupId}");
+            return null;
+        }
+
+        $total = count($members);
+
+        // 4. Advance the shared group counter (round-robin)
+        $lastIndex = $this->rrAssignmentsEntity->getLastAssignmentIndexByGroup($groupId);
+        // NULL means "never assigned yet" → start at 0
+        $nextIndex = ($lastIndex === null || $lastIndex === false)
+            ? 0
+            : (((int) $lastIndex + 1) % $total);
+
+        // 5. Persist
         if ($storeChoice) {
-            $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
+            $this->rrAssignmentsEntity->updateLastAssignmentIndexByGroup($groupId, $nextIndex);
         }
 
-        $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
-        
-        // Check if group should also be assigned
-        $groupId = null;
+        $userId = (int) $members[$nextIndex]['UserId'];
+
+        // 6. Resolve group assignment preference
+        $assignGroupId = null;
         if ($this->rrAssignmentsEntity->getOptionAutoAssignGroup() === 1) {
-            $groupId = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
+            $assignGroupId = $groupId;
         }
-        
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - assigned user_id: ' . $userId . ', group_id: ' . var_export($groupId, true));
-        
+
+        PluginRoundRobinLogger::addDebug(
+            __FUNCTION__ . " - cat={$itilcategoriesId} group={$groupId}"
+            . " members={$total} index={$nextIndex} user={$userId}"
+        );
+
         return [
-            'user_id' => $userId,
-            'group_id' => $groupId
+            'user_id'  => $userId,
+            'group_id' => $assignGroupId,
         ];
     }
 
-    protected function getLastAssignmentIndexId(int $categoryId) {
-        return $this->rrAssignmentsEntity->getLastAssignmentIndex($categoryId);
-    }
-
-    protected function getLastAssignmentIndex(CommonDBTM $item) {
-        $itilcategoriesId = $this->getTicketCategory($item);
-        return $this->rrAssignmentsEntity->getLastAssignmentIndex($itilcategoriesId);
-    }
+    // -------------------------------------------------------------------------
+    // IPluginRoundRobinHookItemHandler contract
+    // -------------------------------------------------------------------------
 
     public function itemPurged(CommonDBTM $item) {
         PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to do');
@@ -199,5 +204,4 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
     public function itemDeleted(CommonDBTM $item) {
         PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to do');
     }
-
 }

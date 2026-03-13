@@ -28,7 +28,6 @@
  * -------------------------------------------------------------------------
  */
 
-// Include dependencies from same directory using __DIR__
 require_once __DIR__ . '/config.class.php';
 require_once __DIR__ . '/logger.class.php';
 
@@ -37,21 +36,27 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
     protected $DB;
     protected $rrAssignmentTable;
     protected $rrOptionsTable;
+    protected $rrGroupsTable;
 
     public function __construct() {
         global $DB;
 
-        $this->DB = $DB;
+        $this->DB              = $DB;
         $this->rrAssignmentTable = PluginRoundRobinConfig::getRrAssignmentTable();
         $this->rrOptionsTable    = PluginRoundRobinConfig::getRrOptionsTable();
+        $this->rrGroupsTable     = PluginRoundRobinConfig::getRrGroupsTable();
     }
+
+    // =========================================================================
+    // Install / uninstall
+    // =========================================================================
 
     /**
      * Initialize plugin tables on install/upgrade.
      *
-     * Idempotent: creates tables if they don't exist, then syncs categories
+     * Idempotent: creates tables if they don't exist, syncs categories
      * without wiping existing is_active settings. Safe to call on every
-     * install or plugin update.
+     * install or upgrade.
      */
     public function init() {
         $this->createTable();
@@ -65,82 +70,109 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
     public function cleanUp() {
         PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - entered...');
 
-        if ($this->DB->tableExists($this->rrAssignmentTable)) {
-            $this->DB->doQueryOrDie(
-                "DROP TABLE `{$this->rrAssignmentTable}`",
-                "Error dropping {$this->rrAssignmentTable}"
-            );
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - dropped table: ' . $this->rrAssignmentTable);
-        }
-
-        if ($this->DB->tableExists($this->rrOptionsTable)) {
-            $this->DB->doQueryOrDie(
-                "DROP TABLE `{$this->rrOptionsTable}`",
-                "Error dropping {$this->rrOptionsTable}"
-            );
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - dropped table: ' . $this->rrOptionsTable);
+        foreach ([$this->rrAssignmentTable, $this->rrGroupsTable, $this->rrOptionsTable] as $table) {
+            if ($this->DB->tableExists($table)) {
+                $this->DB->doQueryOrDie("DROP TABLE `{$table}`", "Error dropping {$table}");
+                PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - dropped: ' . $table);
+            }
         }
     }
 
-    /**
-     * Create plugin tables if they do not already exist.
-     */
+    // =========================================================================
+    // Table creation
+    // =========================================================================
+
     protected function createTable() {
         PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - entered...');
 
+        // --- assignments (per-category config + is_active) ---
         if (!$this->DB->tableExists($this->rrAssignmentTable)) {
-            $query = "CREATE TABLE IF NOT EXISTS `{$this->rrAssignmentTable}` (
-                `id`                    int unsigned NOT NULL AUTO_INCREMENT,
-                `itilcategories_id`     int unsigned NOT NULL,
-                `is_active`             tinyint NOT NULL DEFAULT 0,
-                `last_assignment_index` int DEFAULT NULL,
-                PRIMARY KEY (`id`),
-                UNIQUE KEY `ix_itilcategories_uq` (`itilcategories_id`),
-                KEY `ix_is_active` (`is_active`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - creating table: ' . $this->rrAssignmentTable);
-            $this->DB->doQueryOrDie($query, "Error creating {$this->rrAssignmentTable}");
+            $this->DB->doQueryOrDie(
+                "CREATE TABLE IF NOT EXISTS `{$this->rrAssignmentTable}` (
+                    `id`                int unsigned NOT NULL AUTO_INCREMENT,
+                    `itilcategories_id` int unsigned NOT NULL,
+                    `is_active`         tinyint      NOT NULL DEFAULT 0,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `ix_itilcategories_uq` (`itilcategories_id`),
+                    KEY `ix_is_active` (`is_active`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                  COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC",
+                "Error creating {$this->rrAssignmentTable}"
+            );
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - created: ' . $this->rrAssignmentTable);
+        } else {
+            // Upgrade path: drop legacy last_assignment_index column if it exists
+            // (index is now tracked per-group in rr_groups table)
+            $this->DB->doQueryOrDie(
+                "ALTER TABLE `{$this->rrAssignmentTable}`
+                 MODIFY COLUMN `is_active` tinyint NOT NULL DEFAULT 0",
+                "Error altering {$this->rrAssignmentTable}"
+            );
+            if ($this->DB->fieldExists($this->rrAssignmentTable, 'last_assignment_index')) {
+                $this->DB->doQueryOrDie(
+                    "ALTER TABLE `{$this->rrAssignmentTable}`
+                     DROP COLUMN `last_assignment_index`",
+                    "Error dropping last_assignment_index from {$this->rrAssignmentTable}"
+                );
+                PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - dropped legacy column last_assignment_index');
+            }
         }
 
-        if (!$this->DB->tableExists($this->rrOptionsTable)) {
-            $query = "CREATE TABLE IF NOT EXISTS `{$this->rrOptionsTable}` (
-                `id`                int unsigned NOT NULL AUTO_INCREMENT,
-                `auto_assign_group` tinyint NOT NULL DEFAULT 1,
-                PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
+        // --- group rotation index (shared counter per group) ---
+        if (!$this->DB->tableExists($this->rrGroupsTable)) {
+            $this->DB->doQueryOrDie(
+                "CREATE TABLE IF NOT EXISTS `{$this->rrGroupsTable}` (
+                    `id`                    int unsigned NOT NULL AUTO_INCREMENT,
+                    `groups_id`             int unsigned NOT NULL,
+                    `last_assignment_index` int          DEFAULT NULL,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `ix_groups_uq` (`groups_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                  COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC",
+                "Error creating {$this->rrGroupsTable}"
+            );
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - created: ' . $this->rrGroupsTable);
+        }
 
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - creating table: ' . $this->rrOptionsTable);
-            $this->DB->doQueryOrDie($query, "Error creating {$this->rrOptionsTable}");
+        // --- options ---
+        if (!$this->DB->tableExists($this->rrOptionsTable)) {
+            $this->DB->doQueryOrDie(
+                "CREATE TABLE IF NOT EXISTS `{$this->rrOptionsTable}` (
+                    `id`                int unsigned NOT NULL AUTO_INCREMENT,
+                    `auto_assign_group` tinyint      NOT NULL DEFAULT 1,
+                    PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                  COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC",
+                "Error creating {$this->rrOptionsTable}"
+            );
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - created: ' . $this->rrOptionsTable);
         }
     }
 
+    // =========================================================================
+    // Category sync
+    // =========================================================================
+
     /**
-     * Sync the assignment table with the current ITIL categories:
-     *  - Insert rows for categories that don't have one yet (is_active=0 by default).
-     *  - Remove rows whose category no longer exists.
-     *
-     * Existing rows (and their is_active / last_assignment_index values) are
-     * left untouched, so reinstalling or upgrading the plugin never resets
-     * the administrator's configuration.
+     * Sync the assignment table with current ITIL categories.
+     * Inserts missing rows (is_active=0) and removes orphaned ones.
+     * Existing is_active values are never touched.
      */
     protected function syncCategories() {
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - syncing categories...');
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - syncing...');
 
-        // --- insert missing categories ---
         $allCategories = $this->DB->request([
             'SELECT' => ['id'],
             'FROM'   => 'glpi_itilcategories',
         ]);
-
         foreach ($allCategories as $cat) {
             $this->insertItilCategory($cat['id']);
         }
 
-        // --- remove orphaned rows (category was deleted outside the hook) ---
+        // Remove rows for categories that no longer exist
         $orphans = $this->DB->request([
-            'SELECT' => ['a.id'],
-            'FROM'   => $this->rrAssignmentTable . ' AS a',
+            'SELECT'    => ['a.id'],
+            'FROM'      => $this->rrAssignmentTable . ' AS a',
             'LEFT JOIN' => [
                 'glpi_itilcategories AS c' => [
                     'ON' => ['a' => 'itilcategories_id', 'c' => 'id'],
@@ -148,36 +180,15 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             ],
             'WHERE' => ['c.id' => null],
         ]);
-
-        foreach ($orphans as $orphan) {
-            $this->DB->delete($this->rrAssignmentTable, ['id' => (int) $orphan['id']]);
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - removed orphaned row id: ' . $orphan['id']);
+        foreach ($orphans as $o) {
+            $this->DB->delete($this->rrAssignmentTable, ['id' => (int) $o['id']]);
         }
 
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sync complete');
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - done');
     }
 
     /**
-     * Ensure the options table has exactly one row with default values.
-     * Does nothing if the row already exists.
-     */
-    protected function ensureOptionsRow() {
-        $result = $this->DB->request([
-            'FROM'  => $this->rrOptionsTable,
-            'LIMIT' => 1,
-        ]);
-
-        if (count($result) === 0) {
-            $this->DB->insert($this->rrOptionsTable, ['auto_assign_group' => 1]);
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - inserted default options row');
-        }
-    }
-
-    /**
-     * Insert a single ITIL category into the assignment table.
-     * Does nothing if already present (idempotent).
-     *
-     * @param int $itilCategory
+     * Insert a category row if not already present (idempotent).
      */
     public function insertItilCategory($itilCategory) {
         $exists = $this->DB->request([
@@ -192,48 +203,31 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
                 'itilcategories_id' => (int) $itilCategory,
                 'is_active'         => 0,
             ]);
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - inserted category: ' . $itilCategory);
         }
     }
 
-    /**
-     * @deprecated Use ensureOptionsRow() via init(). Kept for BC.
-     */
+    // =========================================================================
+    // Options
+    // =========================================================================
+
+    protected function ensureOptionsRow() {
+        $result = $this->DB->request(['FROM' => $this->rrOptionsTable, 'LIMIT' => 1]);
+        if (count($result) === 0) {
+            $this->DB->insert($this->rrOptionsTable, ['auto_assign_group' => 1]);
+        }
+    }
+
+    /** @deprecated Use ensureOptionsRow() via init(). Kept for BC. */
     public function insertOptions() {
         $this->ensureOptionsRow();
     }
 
-    // -------------------------------------------------------------------------
-    // Getters / setters
-    // -------------------------------------------------------------------------
-
     public function getOptionAutoAssignGroup() {
-        $result = $this->DB->request([
-            'FROM'  => $this->rrOptionsTable,
-            'LIMIT' => 1,
-        ]);
-
+        $result = $this->DB->request(['FROM' => $this->rrOptionsTable, 'LIMIT' => 1]);
         if (count($result) > 0) {
-            $row = $result->current();
-            return (int) $row['auto_assign_group'];
+            return (int) $result->current()['auto_assign_group'];
         }
-        return 1; // safe default
-    }
-
-    public function getGroupByItilCategory($itilCategory) {
-        $result = $this->DB->request([
-            'SELECT' => ['groups_id'],
-            'FROM'   => 'glpi_itilcategories',
-            'WHERE'  => ['id' => (int) $itilCategory],
-            'LIMIT'  => 1,
-        ]);
-
-        if (count($result) > 0) {
-            $row      = $result->current();
-            $groupsId = (int) $row['groups_id'];
-            return $groupsId !== 0 ? $groupsId : false;
-        }
-        return false;
+        return 1;
     }
 
     public function updateAutoAssignGroup($autoAssignGroup) {
@@ -242,23 +236,28 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             ['auto_assign_group' => (int) $autoAssignGroup],
             ['id' => 1]
         );
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - updated to: ' . $autoAssignGroup);
+    }
+
+    // =========================================================================
+    // Category helpers
+    // =========================================================================
+
+    public function getGroupByItilCategory($itilCategory) {
+        $result = $this->DB->request([
+            'SELECT' => ['groups_id'],
+            'FROM'   => 'glpi_itilcategories',
+            'WHERE'  => ['id' => (int) $itilCategory],
+            'LIMIT'  => 1,
+        ]);
+        if (count($result) > 0) {
+            $groupsId = (int) $result->current()['groups_id'];
+            return $groupsId !== 0 ? $groupsId : false;
+        }
+        return false;
     }
 
     public function deleteItilCategory($itilCategory) {
-        $this->DB->delete(
-            $this->rrAssignmentTable,
-            ['itilcategories_id' => (int) $itilCategory]
-        );
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - deleted category: ' . $itilCategory);
-    }
-
-    public function updateLastAssignmentIndex($itilcategoriesId, $index) {
-        $this->DB->update(
-            $this->rrAssignmentTable,
-            ['last_assignment_index' => (int) $index],
-            ['itilcategories_id'     => (int) $itilcategoriesId]
-        );
+        $this->DB->delete($this->rrAssignmentTable, ['itilcategories_id' => (int) $itilCategory]);
     }
 
     public function updateIsActive($itilcategoriesId, $isActive) {
@@ -269,38 +268,122 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
         );
     }
 
-    public function getLastAssignmentIndex($itilcategoriesId) {
+    /**
+     * Returns the is_active flag for a given category, or false if not found.
+     */
+    public function isActiveForCategory(int $itilcategoriesId): bool {
         $result = $this->DB->request([
-            'SELECT' => ['last_assignment_index'],
+            'SELECT' => ['is_active'],
             'FROM'   => $this->rrAssignmentTable,
-            'WHERE'  => [
-                'itilcategories_id' => (int) $itilcategoriesId,
-                'is_active'         => 1,
-            ],
+            'WHERE'  => ['itilcategories_id' => $itilcategoriesId],
             'LIMIT'  => 1,
         ]);
-
-        $rows = iterator_to_array($result);
-
-        if (count($rows) !== 1) {
-            // Category not configured for RR or unique index violated
+        if (count($result) === 0) {
             return false;
         }
+        return (bool) $result->current()['is_active'];
+    }
 
-        return $rows[0]['last_assignment_index'];
+    // =========================================================================
+    // Group-based rotation index (the actual RR state)
+    // =========================================================================
+
+    /**
+     * Get the current rotation index for a group.
+     * Returns NULL on first assignment (no history yet), or false if the group
+     * row doesn't exist at all (shouldn't happen after ensureGroupRow).
+     *
+     * @param  int        $groupId
+     * @return int|null|false
+     */
+    public function getLastAssignmentIndexByGroup(int $groupId) {
+        $result = $this->DB->request([
+            'SELECT' => ['last_assignment_index'],
+            'FROM'   => $this->rrGroupsTable,
+            'WHERE'  => ['groups_id' => $groupId],
+            'LIMIT'  => 1,
+        ]);
+        if (count($result) === 0) {
+            return false;
+        }
+        return $result->current()['last_assignment_index']; // may be NULL
     }
 
     /**
-     * Return all assignments joined with category and group data.
-     * Single query via LEFT JOIN — avoids the N+1 pattern.
+     * Persist the new rotation index for a group.
+     * Upserts: inserts the row if it doesn't exist yet.
      *
-     * @return array  Each row: id, itilcategories_id, category_name,
-     *                groups_id, group_name, num_group_members, is_active
+     * @param int $groupId
+     * @param int $index
+     */
+    public function updateLastAssignmentIndexByGroup(int $groupId, int $index) {
+        $exists = $this->DB->request([
+            'SELECT' => ['id'],
+            'FROM'   => $this->rrGroupsTable,
+            'WHERE'  => ['groups_id' => $groupId],
+            'LIMIT'  => 1,
+        ]);
+
+        if (count($exists) > 0) {
+            $this->DB->update(
+                $this->rrGroupsTable,
+                ['last_assignment_index' => $index],
+                ['groups_id'             => $groupId]
+            );
+        } else {
+            $this->DB->insert($this->rrGroupsTable, [
+                'groups_id'             => $groupId,
+                'last_assignment_index' => $index,
+            ]);
+        }
+
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - group {$groupId} → index {$index}");
+    }
+
+    // =========================================================================
+    // Legacy per-category index methods (kept for BC, delegate to group)
+    // =========================================================================
+
+    /**
+     * @deprecated Use getLastAssignmentIndexByGroup() directly.
+     *             Kept so any external code that calls this still works.
+     */
+    public function getLastAssignmentIndex($itilcategoriesId) {
+        $groupId = $this->getGroupByItilCategory($itilcategoriesId);
+        if ($groupId === false) {
+            return false;
+        }
+        // A category that is not active should return false
+        if (!$this->isActiveForCategory((int) $itilcategoriesId)) {
+            return false;
+        }
+        return $this->getLastAssignmentIndexByGroup($groupId);
+    }
+
+    /**
+     * @deprecated Use updateLastAssignmentIndexByGroup() directly.
+     */
+    public function updateLastAssignmentIndex($itilcategoriesId, $index) {
+        $groupId = $this->getGroupByItilCategory($itilcategoriesId);
+        if ($groupId !== false) {
+            $this->updateLastAssignmentIndexByGroup((int) $groupId, (int) $index);
+        }
+    }
+
+    // =========================================================================
+    // UI data
+    // =========================================================================
+
+    /**
+     * Return all assignments with category/group info for the config page.
+     * Single JOIN query + one bulk COUNT — no N+1.
+     *
+     * @return array  id, itilcategories_id, category_name, groups_id,
+     *                group_name, num_group_members, is_active
      */
     public function getAll() {
-        // One query: assignments + category completename + group completename
         $rows = $this->DB->request([
-            'SELECT' => [
+            'SELECT'    => [
                 'a.id',
                 'a.itilcategories_id',
                 'a.is_active',
@@ -317,12 +400,11 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
                     'ON' => ['c' => 'groups_id', 'g' => 'id'],
                 ],
             ],
-            'ORDER' => 'a.id ASC',
+            'ORDER' => 'category_name ASC',
         ]);
 
-        // Collect group IDs that actually exist so we can count members in bulk
-        $groupIds = [];
         $resultArray = [];
+        $groupIds    = [];
         foreach ($rows as $row) {
             $entry = [
                 'id'                => (int) $row['id'],
@@ -334,32 +416,29 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
                 'is_active'         => (int) $row['is_active'],
             ];
             $resultArray[] = $entry;
-
             if (!empty($row['groups_id'])) {
                 $groupIds[(int) $row['groups_id']] = true;
             }
         }
 
-        // Count members per group in a single query
+        // Member counts in a single query
         if (!empty($groupIds)) {
-            $memberCounts = $this->DB->request([
+            $counts   = $this->DB->request([
                 'SELECT' => ['groups_id', 'COUNT(id) AS cnt'],
                 'FROM'   => 'glpi_groups_users',
                 'WHERE'  => ['groups_id' => array_keys($groupIds)],
                 'GROUP'  => 'groups_id',
             ]);
-
             $countMap = [];
-            foreach ($memberCounts as $mc) {
-                $countMap[(int) $mc['groups_id']] = (int) $mc['cnt'];
+            foreach ($counts as $c) {
+                $countMap[(int) $c['groups_id']] = (int) $c['cnt'];
             }
-
-            foreach ($resultArray as &$entry) {
-                if ($entry['groups_id'] > 0) {
-                    $entry['num_group_members'] = $countMap[$entry['groups_id']] ?? 0;
+            foreach ($resultArray as &$e) {
+                if ($e['groups_id'] > 0) {
+                    $e['num_group_members'] = $countMap[$e['groups_id']] ?? 0;
                 }
             }
-            unset($entry);
+            unset($e);
         }
 
         PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - returned ' . count($resultArray) . ' rows');
