@@ -1,0 +1,68 @@
+# RoundRobin plugin for GLPI - Spanish (Spain) translation
+# Copyright (C) 2022 initiativa s.r.l.
+# This file is distributed under the same license as the roundrobin package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: roundrobin\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-12-30 01:37+0000\n"
+"PO-Revision-Date: 2025-03-13 00:00+0000\n"
+"Last-Translator: GLPI Community <community@glpi-project.org>\n"
+"Language-Team: Spanish <es@li.org>\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "RoundRobin Settings"
+msgstr "Configuración de Round Robin"
+
+msgid "Enable Group Round Robin Ticket Assignment for each ITILCategory"
+msgstr "Habilitar asignación Round Robin de tickets por grupo para cada categoría ITIL"
+
+msgid "Assign also to the original Group:"
+msgstr "Asignar también al grupo original:"
+
+msgid "Yes"
+msgstr "Sí"
+
+msgid "No"
+msgstr "No"
+
+msgid "ITILCategory"
+msgstr "Categoría ITIL"
+
+msgid "Group"
+msgstr "Grupo"
+
+msgid "Members #"
+msgstr "Nº de miembros"
+
+msgid "Setting"
+msgstr "Configuración"
+
+msgid "Settings"
+msgstr "Configuración"
+
+msgid "Enabled"
+msgstr "Habilitado"
+
+msgid "Disabled"
+msgstr "Deshabilitado"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "No group assigned"
+msgstr "Sin grupo asignado"
+
+msgid "Config saved"
+msgstr "Configuración guardada"
+
+msgid "Config reset"
+msgstr "Configuración restablecida"
