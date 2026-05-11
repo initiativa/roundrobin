@@ -32,11 +32,7 @@ class PluginRoundRobinConfig {
     public static $PLUGIN_ROUNDROBIN_ENV = 'development';
     public static $PLUGIN_ROUNDROBIN_NAME = 'RoundRobin';
     public static $PLUGIN_ROUNDROBIN_CODE = 'roundrobin';
-<<<<<<< Updated upstream
-    public static $PLUGIN_ROUNDROBIN_VERSION = '2.0.0';
-=======
     public static $PLUGIN_ROUNDROBIN_VERSION = '2.2.0';
->>>>>>> Stashed changes
     public static $PLUGIN_ROUNDROBIN_AUTHOR = '<a href="https://www.initiativa.it/glpi.php" target="_blank">initiativa s.r.l.</a>';
     public static $PLUGIN_ROUNDROBIN_LICENSE = 'GPLv3';
     public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://github.com/initiativa/roundrobin/';

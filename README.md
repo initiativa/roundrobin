@@ -17,15 +17,3 @@ Translations are shipped under `locales/` (`en_GB`, `en_US`, `fr_FR`, `de_DE`, `
 
 See **INSTALLATION_GUIDE.md** for step-by-step install and behaviour notes (including reinstall with preserved DB tables).
 
-<<<<<<< Updated upstream
-## GLPI 11 Compatibility
-
-Version 2.0.0 adds support for GLPI 11.x:
-- Updated to use GLPI 11 actor system (`_actors` array) for ticket assignment
-- Uses GLPI's DB framework methods instead of raw SQL queries
-- Compatible with PHP 8.1+
-- Uses Twig templates for configuration form
-
-enjoy!
-=======
->>>>>>> Stashed changes

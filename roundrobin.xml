@@ -23,14 +23,11 @@
     </authors>
     <versions>
         <version>
-<<<<<<< Updated upstream
-=======
             <num>2.2.0</num>
             <compatibility>~11.0</compatibility>
             <download_url>https://github.com/initiativa/roundrobin/releases/download/2.2.0/roundrobin-2.2.0.tar.gz</download_url>
         </version>
         <version>
->>>>>>> Stashed changes
             <num>2.0.0</num>
             <compatibility>~11.0</compatibility>
             <download_url>https://github.com/initiativa/roundrobin/releases/download/2.0.0/roundrobin-2.0.0.tar.gz</download_url>
@@ -51,13 +48,10 @@
     <langs>
         <lang>de_DE</lang>
         <lang>en_GB</lang>
-<<<<<<< Updated upstream
-=======
         <lang>en_US</lang>
         <lang>fr_FR</lang>
         <lang>it_IT</lang>
         <lang>pl_PL</lang>
->>>>>>> Stashed changes
     </langs>
     <license>GPL v3</license>
     <tags>

@@ -68,8 +68,6 @@ function plugin_roundrobin_install() {
         PluginRoundRobinLogger::addError(__FUNCTION__ . ' - Error: ' . $e->getMessage());
         return false;
     }
-<<<<<<< Updated upstream
-=======
 }
 
 /**
@@ -90,7 +88,6 @@ function plugin_roundrobin_upgrade($currentversion) {
         PluginRoundRobinLogger::addError(__FUNCTION__ . ' - Error: ' . $e->getMessage());
         return false;
     }
->>>>>>> Stashed changes
 }
 
 /**
@@ -181,19 +178,6 @@ function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
     return true;
 }
 
-<<<<<<< Updated upstream
-/**
- * ticket added - GLPI 11: assignment already done in pre_item_add via _actors
- */
-function plugin_roundrobin_hook_item_add_handler(Ticket $ticket) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($ticket->getType(), true));
-    // In GLPI 11, the assignment is already done via _actors in pre_item_add
-    // This hook is kept for logging/compatibility
-    return $ticket;
-}
-
-=======
->>>>>>> Stashed changes
 function plugin_roundrobin_hook_itil_item_add_handler(ITILCategory $category) {
     PluginRoundRobinLogger::addDebug(__FUNCTION__ . print_r($category, true));
     $handler = new PluginRoundRobinITILCategoryHookHandler();
