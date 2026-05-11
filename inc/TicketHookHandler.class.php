@@ -125,7 +125,7 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
             $resultArray[] = $row;
         }
         
-        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - result array: ', $resultArray);
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - member count: ' . count($resultArray));
         return $resultArray;
     }
 
@@ -144,7 +144,7 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
         }
 
         $groupIdForCategory = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
-        if ($groupIdForCategory === false) {
+        if ($groupIdForCategory === null) {
             PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - no group assigned for category: ' . $itilcategoriesId);
             return null;
         }
@@ -175,19 +175,19 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
             $this->rrAssignmentsEntity->updateLastGroupAssignmentIndex((int)$groupIdForCategory, (int)$newAssignmentIndex);
         }
 
-        $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
-        
-        // Check if group should also be assigned
-        $groupId = null;
+        $userId = (int) $categoryGroupMembers[$newAssignmentIndex]['UserId'];
+
+        $assignGroupId = null;
         if ($this->rrAssignmentsEntity->getOptionAutoAssignGroup() === 1) {
-            $groupId = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
+            $gid = $this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId);
+            $assignGroupId = ($gid !== null && $gid > 0) ? $gid : null;
         }
-        
-        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - assigned user_id: ' . $userId . ', group_id: ' . var_export($groupId, true));
-        
+
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - assigned user_id: ' . $userId . ', group_id: ' . var_export($assignGroupId, true));
+
         return [
-            'user_id' => $userId,
-            'group_id' => $groupId
+            'user_id'  => $userId,
+            'group_id' => $assignGroupId,
         ];
     }
 

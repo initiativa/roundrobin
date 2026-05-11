@@ -48,6 +48,43 @@ function plugin_roundrobin_getHookHandlers() {
 }
 
 /**
+ * Merge RoundRobin assignee into Ticket input (GLPI 11 `_actors`).
+ *
+ * @param array<string,mixed> $input
+ * @param array{user_id:int, group_id:int|null} $assignmentData
+ * @return array<string,mixed>
+ */
+function plugin_roundrobin_merge_rr_into_ticket_input(array $input, array $assignmentData): array {
+    if (isset($input['_users_id_assign'])) {
+        unset($input['_users_id_assign']);
+    }
+    if (isset($input['_groups_id_assign'])) {
+        unset($input['_groups_id_assign']);
+    }
+    if (!isset($input['_actors'])) {
+        $input['_actors'] = [];
+    }
+    if (!isset($input['_actors']['assign'])) {
+        $input['_actors']['assign'] = [];
+    }
+    $input['_actors']['assign'][] = [
+        'itemtype'         => 'User',
+        'items_id'         => (int) $assignmentData['user_id'],
+        'use_notification' => 1,
+    ];
+    $gid = $assignmentData['group_id'] ?? null;
+    if ($gid !== null && (int) $gid > 0) {
+        $input['_actors']['assign'][] = [
+            'itemtype'         => 'Group',
+            'items_id'         => (int) $gid,
+            'use_notification' => 1,
+        ];
+    }
+
+    return $input;
+}
+
+/**
  * Install hook
  *
  * @return boolean
@@ -135,42 +172,7 @@ function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
         $assignmentData = $handler->findUserIdToAssign($categoryId, true);
         
         if ($assignmentData !== null) {
-            $input = $item->input;
-
-            // Clear any existing assignment in input
-            if (isset($input['_users_id_assign'])) {
-                unset($input['_users_id_assign']);
-            }
-
-            if (isset($input['_groups_id_assign'])) {
-                unset($input['_groups_id_assign']);
-            }
-
-            // For GLPI 11, use _actors array
-            if (!isset($input['_actors'])) {
-                $input['_actors'] = [];
-            }
-            if (!isset($input['_actors']['assign'])) {
-                $input['_actors']['assign'] = [];
-            }
-
-            // Add user assignment
-            $input['_actors']['assign'][] = [
-                'itemtype' => 'User',
-                'items_id' => $assignmentData['user_id'],
-                'use_notification' => 1
-            ];
-
-            // Add group assignment if enabled
-            if ($assignmentData['group_id'] !== null) {
-                $input['_actors']['assign'][] = [
-                    'itemtype' => 'Group',
-                    'items_id' => $assignmentData['group_id'],
-                    'use_notification' => 1
-                ];
-            }
-
-            $item->input = $input;
+            $item->input = plugin_roundrobin_merge_rr_into_ticket_input($item->input, $assignmentData);
             PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - assigned user: " . $assignmentData['user_id']);
         }
     }
@@ -179,10 +181,87 @@ function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
 }
 
 function plugin_roundrobin_hook_itil_item_add_handler(ITILCategory $category) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . print_r($category, true));
+    PluginRoundRobinLogger::addDebug(
+        __FUNCTION__ . ' - ITILCategory id=' . (int) ($category->fields['id'] ?? 0)
+        . ' name=' . ($category->fields['name'] ?? '')
+    );
     $handler = new PluginRoundRobinITILCategoryHookHandler();
     $handler->itemAdded($category);
     return $category;
+}
+
+/**
+ * When a ticket's ITIL category changes, apply Round Robin if the new category is enabled
+ * and the ticket has no existing assignee.
+ */
+function plugin_roundrobin_hook_pre_item_update_handler(CommonDBTM $item) {
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - entered');
+    if ($item->getType() !== 'Ticket') {
+        return;
+    }
+    if (!isset($item->input['itilcategories_id'])) {
+        return;
+    }
+    $newCat = (int) $item->input['itilcategories_id'];
+    $oldCat = (int) ($item->fields['itilcategories_id'] ?? 0);
+    if ($newCat < 1 || $newCat === $oldCat) {
+        return;
+    }
+
+    $ticketId = (int) ($item->fields['id'] ?? 0);
+    if ($ticketId > 0 && class_exists('Ticket')) {
+        $t = new Ticket();
+        if ($t->getFromDB($ticketId) && method_exists($t, 'countUsers')) {
+            $assignType = defined('CommonITILActor::ASSIGN') ? CommonITILActor::ASSIGN : 2;
+            if ((int) $t->countUsers($assignType) > 0) {
+                PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - skip: ticket already has assignee(s)');
+
+                return;
+            }
+        }
+    }
+
+    $handler = new PluginRoundRobinTicketHookHandler();
+    $assignmentData = $handler->findUserIdToAssign($newCat, true);
+    if ($assignmentData === null) {
+        return;
+    }
+
+    $item->input = plugin_roundrobin_merge_rr_into_ticket_input($item->input, $assignmentData);
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - assigned user: ' . $assignmentData['user_id']);
+}
+
+/**
+ * ITIL category updated: ensure row exists after restore; reset group rotation when group changes.
+ */
+function plugin_roundrobin_hook_itil_item_update_handler(CommonDBTM $item) {
+    if ($item->getType() !== 'ITILCategory') {
+        return $item;
+    }
+
+    $entity = new PluginRoundRobinRRAssignmentsEntity();
+    $cid = (int) ($item->fields['id'] ?? 0);
+    if ($cid < 1) {
+        return $item;
+    }
+
+    if (isset($item->input['is_deleted']) && (int) $item->input['is_deleted'] === 0) {
+        $entity->insertItilCategory($cid);
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - restored category id=' . $cid);
+
+        return $item;
+    }
+
+    if (isset($item->input['groups_id'])) {
+        $oldG = (int) ($item->fields['groups_id'] ?? 0);
+        $newG = (int) $item->input['groups_id'];
+        if ($newG > 0 && $newG !== $oldG) {
+            $entity->resetGroupRotationIndex($newG);
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - groups_id changed for category id=' . $cid . ' new_group=' . $newG);
+        }
+    }
+
+    return $item;
 }
 
 function plugin_roundrobin_hook_item_pre_update_handler(CommonDBTM $item) {
@@ -192,11 +271,11 @@ function plugin_roundrobin_hook_item_pre_update_handler(CommonDBTM $item) {
 
 
 /**
- * item updated
+ * Legacy debug stub (not registered). Ticket updates use {@see plugin_roundrobin_hook_pre_item_update_handler}.
  */
 function plugin_roundrobin_hook_item_update_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($item, true));
-    Session::addMessageAfterRedirect(sprintf(__('%1$s: %2$s'), __('Hook Hanlder: ITEM UPDATE'), $item->getType()));
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - legacy stub, item type: ' . $item->getType());
+
     return $item;
 }
 

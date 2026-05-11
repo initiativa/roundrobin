@@ -29,7 +29,8 @@
  */
 class PluginRoundRobinConfig {
 
-    public static $PLUGIN_ROUNDROBIN_ENV = 'development';
+    /** Set to `development` to enable verbose DEBUG file logs; `production` suppresses them. */
+    public static $PLUGIN_ROUNDROBIN_ENV = 'production';
     public static $PLUGIN_ROUNDROBIN_NAME = 'RoundRobin';
     public static $PLUGIN_ROUNDROBIN_CODE = 'roundrobin';
     public static $PLUGIN_ROUNDROBIN_VERSION = '2.2.0';
@@ -65,13 +66,13 @@ class PluginRoundRobinConfig {
             'ITILCategory' => 'plugin_roundrobin_hook_itil_item_add_handler',
         ];
 
-        // $PLUGIN_HOOKS['item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-        //     'Ticket' => 'plugin_roundrobin_hook_item_update_handler'
-        // ];
+        $PLUGIN_HOOKS['pre_item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'Ticket' => 'plugin_roundrobin_hook_pre_item_update_handler',
+        ];
 
-        // $PLUGIN_HOOKS['pre_item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-        //     'Ticket' => 'plugin_roundrobin_hook_item_pre_update_handler'
-        // ];
+        $PLUGIN_HOOKS['item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'ITILCategory' => 'plugin_roundrobin_hook_itil_item_update_handler',
+        ];
 
         // $PLUGIN_HOOKS['pre_item_delete'][self::$PLUGIN_ROUNDROBIN_CODE] = [
         //     'Ticket' => 'plugin_roundrobin_hook_pre_item_delete_handler'

@@ -47,6 +47,11 @@ class PluginRoundRobinLogger {
      * @param array $details
      */
     protected static function add($type, $message, $details = []) {
+        if ($type === self::$DEBUG && class_exists('PluginRoundRobinConfig')
+            && PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_ENV !== 'development') {
+            return;
+        }
+
         // Build log message
         $logMessage = $message;
         if (!empty($details)) {

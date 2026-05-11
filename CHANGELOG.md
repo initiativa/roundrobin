@@ -9,6 +9,10 @@
 - **Config usability:** Added **Select all** for category switches, and switch labels now show **Enabled/Disabled** correctly.
 - **Access:** Entry under **Setup** (alongside Plugins → Configure) for the configuration page.
 - **Persistence:** Plugin tables are retained on uninstall so a reinstall keeps category toggles and options (documented).
+- **Hooks:** `pre_item_update` on Ticket applies Round Robin when `itilcategories_id` changes (skipped if the ticket already has an assignee). `item_update` on ITILCategory re-syncs after restore and resets group rotation when the category’s group changes.
+- **API hygiene:** `getGroupByItilCategory()` now returns `?int` (null instead of `false`); group actors only added when `group_id` is a positive int.
+- **Logging:** DEBUG file logs are suppressed unless `PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_ENV === 'development'`.
+- **Dead code:** `PluginRoundRobinRequest::getCurrentProfileSettings()` no longer queries a non-existent table (returns `null`).
 
 ### Requirements
 - Unchanged : GLPI 11.0.x, PHP ≥ 8.1.

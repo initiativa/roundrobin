@@ -195,11 +195,14 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
         return 1; // default
     }
 
-    public function getGroupByItilCategory($itilCategory) {
+    /**
+     * @return int|null Group id, or null when category missing or has no group (groups_id 0).
+     */
+    public function getGroupByItilCategory(int $itilCategory): ?int {
         $result = $this->DB->request([
             'SELECT' => ['groups_id'],
             'FROM' => 'glpi_itilcategories',
-            'WHERE' => ['id' => (int)$itilCategory],
+            'WHERE' => ['id' => $itilCategory],
             'LIMIT' => 1
         ]);
         
@@ -207,9 +210,20 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             $row = $result->current();
             $groupsId = (int)$row['groups_id'];
             PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - groups_id: ' . $groupsId);
-            return $groupsId !== 0 ? $groupsId : false;
+            return $groupsId > 0 ? $groupsId : null;
         }
-        return false;
+        return null;
+    }
+
+    /**
+     * Remove stored rotation index for a group (e.g. after ITIL category group change).
+     */
+    public function resetGroupRotationIndex(int $groupsId): void {
+        if ($groupsId < 1 || !$this->DB->tableExists($this->rrGroupsTable)) {
+            return;
+        }
+        $this->DB->delete($this->rrGroupsTable, ['groups_id' => $groupsId]);
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - cleared rotation for group ' . $groupsId);
     }
 
     public function updateAutoAssignGroup($autoAssignGroup) {
