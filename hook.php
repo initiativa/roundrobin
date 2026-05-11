@@ -68,6 +68,29 @@ function plugin_roundrobin_install() {
         PluginRoundRobinLogger::addError(__FUNCTION__ . ' - Error: ' . $e->getMessage());
         return false;
     }
+<<<<<<< Updated upstream
+=======
+}
+
+/**
+ * Upgrade hook — required so GLPI updates `glpi_plugins.version` when code is newer than the DB.
+ *
+ * @param string $currentversion Previously installed version from the database.
+ *
+ * @return boolean
+ */
+function plugin_roundrobin_upgrade($currentversion) {
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - from version: ' . (string) $currentversion);
+
+    try {
+        $rrAssignmentsEntity = new PluginRoundRobinRRAssignmentsEntity();
+        $rrAssignmentsEntity->init();
+        return true;
+    } catch (Exception $e) {
+        PluginRoundRobinLogger::addError(__FUNCTION__ . ' - Error: ' . $e->getMessage());
+        return false;
+    }
+>>>>>>> Stashed changes
 }
 
 /**
@@ -158,6 +181,7 @@ function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
     return true;
 }
 
+<<<<<<< Updated upstream
 /**
  * ticket added - GLPI 11: assignment already done in pre_item_add via _actors
  */
@@ -168,6 +192,8 @@ function plugin_roundrobin_hook_item_add_handler(Ticket $ticket) {
     return $ticket;
 }
 
+=======
+>>>>>>> Stashed changes
 function plugin_roundrobin_hook_itil_item_add_handler(ITILCategory $category) {
     PluginRoundRobinLogger::addDebug(__FUNCTION__ . print_r($category, true));
     $handler = new PluginRoundRobinITILCategoryHookHandler();

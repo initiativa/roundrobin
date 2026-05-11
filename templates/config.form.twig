@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <div class="center">
 	<p>
 		<h1>{{ __('RoundRobin Settings', 'roundrobin') }}</h1>
@@ -71,3 +72,371 @@
 </div>
 
 
+=======
+{#
+ # Round robin plugin configuration — scoped under .plugin-roundrobin-config (see printConfigPage).
+ #}
+<style>
+    .plugin-roundrobin-config .plugin-roundrobin-config__section-card {
+        overflow: visible;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-config__section-head {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        min-height: 2rem;
+        padding-block: 0.3rem;
+        overflow: visible;
+        background: linear-gradient(180deg, #e9f2fa 0%, #ddeaf5 100%);
+        border: 1px solid #c5d9ec;
+        border-bottom: none;
+        border-radius: var(--tblr-border-radius-lg, 0.375rem) var(--tblr-border-radius-lg, 0.375rem) 0 0;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-config__section-head > .ribbon {
+        position: absolute;
+        left: 0.85rem;
+        top: -0.25rem;
+        z-index: 2;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-config__head-main {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        margin-inline-start: 3.55rem;
+        padding: 0 1rem 0 0.1rem;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-config__section-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.35;
+        color: #184d7a;
+        letter-spacing: 0.01em;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-config__section-body {
+        border: 1px solid #c5d9ec;
+        border-top: 1px solid #b8d4ea;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-history .rr-list-page-head {
+        position: relative;
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        min-height: 2.45rem;
+        padding-block: 0.45rem;
+        overflow: visible;
+        background: linear-gradient(180deg, #e9f2fa 0%, #ddeaf5 100%);
+        border: 1px solid #c5d9ec;
+        border-bottom: none;
+        border-radius: var(--tblr-border-radius-lg, 0.375rem) var(--tblr-border-radius-lg, 0.375rem) 0 0;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-history .rr-list-page-head > .ribbon {
+        position: absolute;
+        left: 0.85rem;
+        top: -0.28rem;
+        z-index: 2;
+        padding-bottom: 0.8rem;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-history .rr-list-page-head-main {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        flex: 1;
+        margin-inline-start: 3.55rem;
+        padding: 0 1rem 0 0.1rem;
+    }
+    .plugin-roundrobin-config .plugin-roundrobin-history .rr-list-page-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.35;
+        color: #184d7a;
+    }
+    .plugin-roundrobin-config #plugin-rr-category-table thead th {
+        font-family: var(--tblr-body-font-family, inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif);
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.35;
+        letter-spacing: 0.055em;
+        text-transform: uppercase;
+        color: #64748b;
+        font-feature-settings: "cv03", "cv04", "cv11", "liga" 0;
+        border-bottom-width: 1px;
+        border-left: none;
+        border-right: none;
+        padding: 0.55rem 0.65rem;
+        vertical-align: middle;
+    }
+    .plugin-roundrobin-config #plugin-rr-category-table tbody td {
+        font-family: var(--tblr-body-font-family, inter, -apple-system, blinkmacsystemfont, "Segoe UI", helvetica, arial, sans-serif);
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.45;
+        color: rgb(55, 65, 81);
+        vertical-align: middle;
+        padding: 0.55rem 0.65rem;
+        border-left: none;
+        border-right: none;
+    }
+    /* Item links — follow GLPI/Tabler link tokens (readable vs. pale link utilities) */
+    .plugin-roundrobin-config #plugin-rr-category-table tbody td a.rr-item-link {
+        color: var(--bs-link-color, var(--tblr-link-color));
+        font-weight: 500;
+        text-decoration: none;
+    }
+    .plugin-roundrobin-config #plugin-rr-category-table tbody td a.rr-item-link:hover,
+    .plugin-roundrobin-config #plugin-rr-category-table tbody td a.rr-item-link:focus {
+        color: var(--bs-link-hover-color, var(--tblr-link-hover-color));
+        text-decoration: underline;
+    }
+</style>
+
+<header class="plugin-roundrobin-config__page-title mb-4 text-center">
+    <h1 class="display-5 fw-bold text-body mb-0">{{ __('RoundRobin', 'roundrobin') }}</h1>
+</header>
+
+{# —— Group assignment behaviour —— #}
+<form method="post" action="">
+    {{ csrf_token|raw }}
+
+    <div class="card shadow-sm mb-3 border-0 rounded plugin-roundrobin-config__section-card">
+        <div class="plugin-roundrobin-config__section-head">
+            <div class="ribbon ribbon-bookmark ribbon-top ribbon-start bg-blue s-1 align-self-start" aria-hidden="true">
+                <i class="ti ti-adjustments-horizontal fa-2x"></i>
+            </div>
+            <div class="plugin-roundrobin-config__head-main">
+                <h2 class="plugin-roundrobin-config__section-title">{{ __('Group assignment behaviour', 'roundrobin') }}</h2>
+            </div>
+        </div>
+        <div class="card-body plugin-roundrobin-config__section-body rounded-0">
+            <div class="row g-3">
+                <div class="col-12">
+                    <p class="small text-muted mb-2">{{ __('Assign the rotated technician plus the technician group linked to the category when checked.', 'roundrobin') }}</p>
+
+                    <input type="hidden" name="auto_assign_group" value="0"/>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input"
+                               role="switch"
+                               type="checkbox"
+                               id="rr_assign_group_sw"
+                               name="auto_assign_group"
+                               value="1"
+                               {% if auto_assign_group %}checked="checked"{% endif %}
+                               {% if not can_write %}disabled{% endif %} />
+                        <label class="form-check-label" for="rr_assign_group_sw">{{ __('Also assign tickets to this category\'s technician group', 'roundrobin') }}</label>
+                    </div>
+                </div>
+            </div>
+            {% if can_write %}
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" name="save_options" value="1" class="btn btn-primary btn-sm py-2 px-3">
+                        <i class="ti ti-device-floppy me-1" aria-hidden="true"></i>{{ __('Save', 'roundrobin') }}
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+{% if centralInterfaceCheck %}
+
+    {% if config_warnings is defined and config_warnings is not empty %}
+        <div class="alert alert-important alert-warning alert-dismissible mb-3" role="alert">
+            <div class="d-flex">
+                <div>
+                    <i class="ti ti-alert-triangle icon alert-icon ms-2 me-3 mt-1" style="font-size:1.5rem;" aria-hidden="true"></i>
+                </div>
+                <div>
+                    {% for w in config_warnings %}
+                        {% if not loop.first %}<br>{% endif %}{{ w }}{% endfor %}
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close')|e('html_attr') }}"></button>
+        </div>
+    {% endif %}
+
+    <form method="post" action="" class="plugin-roundrobin-history">
+        {{ csrf_token|raw }}
+
+        <div class="card border-0 shadow-sm mb-3" style="overflow: visible;">
+            <div class="rr-list-page-head">
+                <div class="ribbon ribbon-bookmark ribbon-top ribbon-start bg-blue s-1 align-self-start" aria-hidden="true">
+                    <i class="ti ti-category fa-2x"></i>
+                </div>
+                <div class="rr-list-page-head-main">
+                    <h2 class="rr-list-page-title mb-0">{{ __('Categories & technician groups', 'roundrobin') }}</h2>
+                </div>
+            </div>
+
+            <div class="card-body p-0 border-top">
+                <p class="text-muted small px-3 pt-3 mb-0 pb-2">
+                    {{ __('New tickets pick the next technician from the category technician group.', 'roundrobin') }}
+                </p>
+                {% if settings is empty %}
+                    <p class="text-muted p-3 mb-0">{{ __('No ITIL categories found.', 'roundrobin') }}</p>
+                {% else %}
+                    <div class="table-responsive-lg">
+                        <table id="plugin-rr-category-table" class="table table-hover table-striped table-sm align-middle mb-0">
+                            {% set has_enableable_rows = false %}
+                            {% for row in settings %}{% if row.can_enable_roundrobin %}{% set has_enableable_rows = true %}{% endif %}{% endfor %}
+                            <thead class="table-light">
+                            <tr>
+                                <th scope="col">{{ __('ITIL category', 'roundrobin') }}</th>
+                                <th scope="col">{{ __('Technician group', 'roundrobin') }}</th>
+                                <th scope="col">{{ __('Active members', 'roundrobin') }}</th>
+                                <th scope="col">
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 gap-md-3">
+                                        <span class="me-1">{{ __('Settings', 'roundrobin') }}</span>
+                                        {% if can_write and has_enableable_rows %}
+                                            <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 ms-auto"
+                                                 style="text-transform:none;letter-spacing:0;">
+                                                <input class="form-check-input flex-shrink-0 m-0"
+                                                       role="switch"
+                                                       type="checkbox"
+                                                       id="rr_select_all_sw"
+                                                       aria-label="{{ __('Select all', 'roundrobin')|e('html_attr') }}"/>
+                                                <label class="form-check-label small fw-normal text-secondary mb-0"
+                                                       for="rr_select_all_sw">{{ __('Select all', 'roundrobin') }}</label>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in settings %}
+                                <tr>
+                                    <td>
+                                        {% if row.category_url %}
+                                            <a href="{{ row.category_url|e('html_attr') }}" class="rr-item-link">{{ row.category_name|e }}</a>
+                                        {% else %}
+                                            {{ row.category_name|e }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if row.group_url %}
+                                            <a href="{{ row.group_url|e('html_attr') }}" class="rr-item-link">{{ row.group_name|e }}</a>
+                                        {% elseif row.group_name %}
+                                            {{ row.group_name|e }}
+                                        {% else %}
+                                            <span class="text-muted fst-italic">{{ __('No technician group assigned', 'roundrobin') }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-secondary">
+                                        {% if row.groups_id > 0 %}
+                                            {{ row.num_group_members|default(0) }}
+                                        {% else %}
+                                            <span class="text-muted">{{ __('N/A', 'roundrobin') }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="lh-sm">
+                                        <input type="hidden" name="itilcategories_id_{{ row.id }}" value="{{ row.itilcategories_id }}"/>
+
+                                        {% if row.can_enable_roundrobin %}
+                                            <input type="hidden" name="is_active_{{ row.id }}" value="0"/>
+                                            <div class="form-check form-switch mb-0">
+                                                <input class="form-check-input rr-toggle"
+                                                       role="switch"
+                                                       type="checkbox"
+                                                       name="is_active_{{ row.id }}"
+                                                       value="1"
+                                                       id="rr_sw_{{ row.id }}"
+                                                       data-rr-on="{{ __('Enabled', 'roundrobin')|e('html_attr') }}"
+                                                       data-rr-off="{{ __('Disabled', 'roundrobin')|e('html_attr') }}"
+                                                       {% if row.is_active %}checked="checked"{% endif %}
+                                                       {% if not can_write %}disabled{% endif %} />
+                                                <label class="form-check-label rr-toggle-label" for="rr_sw_{{ row.id }}">{% if row.is_active %}{{ __('Enabled', 'roundrobin') }}{% else %}{{ __('Disabled', 'roundrobin') }}{% endif %}</label>
+                                            </div>
+                                        {% else %}
+                                            <input type="hidden" name="is_active_{{ row.id }}" value="0"/>
+                                            <div class="form-check form-switch mb-1">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       disabled
+                                                       role="switch"
+                                                       {% if row.is_active %}checked="checked"{% endif %}
+                                                       id="rr_sw_disabled_{{ row.id }}"/>
+                                                <label class="form-check-label text-muted" for="rr_sw_disabled_{{ row.id }}">{{ __('Disabled', 'roundrobin') }}</label>
+                                            </div>
+                                            <div class="form-text">{{ __('Assign a technician group on the ITIL category first.', 'roundrobin') }}</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if can_write and settings is not empty %}
+                <div class="card-footer border-top bg-transparent d-flex justify-content-end py-3">
+                    <button type="submit" name="save_assignments" value="1" class="btn btn-primary btn-sm py-2 px-3">
+                        <i class="ti ti-device-floppy me-1" aria-hidden="true"></i>{{ __('Save', 'roundrobin') }}
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+
+    <script>
+        (function () {
+            var toggles = Array.prototype.slice.call(document.querySelectorAll('.plugin-roundrobin-config .rr-toggle'));
+            if (!toggles.length) {
+                return;
+            }
+
+            function refreshLabel(cb) {
+                var label = document.querySelector('label[for="' + cb.id + '"].rr-toggle-label');
+                if (!label) {
+                    return;
+                }
+                label.textContent = cb.checked ? cb.dataset.rrOn : cb.dataset.rrOff;
+            }
+
+            toggles.forEach(function (cb) {
+                cb.addEventListener('change', function () { refreshLabel(cb); });
+                refreshLabel(cb);
+            });
+
+            var selectAll = document.getElementById('rr_select_all_sw');
+            if (!selectAll) {
+                return;
+            }
+
+            var selectable = toggles.filter(function (cb) { return !cb.disabled; });
+
+            function syncSelectAllState() {
+                if (!selectable.length) {
+                    selectAll.checked = false;
+                    return;
+                }
+                var checkedCount = selectable.filter(function (cb) { return cb.checked; }).length;
+                // Only two states: on when every row is on, off otherwise (no indeterminate — avoids a different track colour).
+                selectAll.checked = checkedCount === selectable.length && checkedCount > 0;
+            }
+
+            selectAll.addEventListener('change', function () {
+                var target = selectAll.checked;
+                selectable.forEach(function (cb) {
+                    if (cb.checked !== target) {
+                        cb.checked = target;
+                        refreshLabel(cb);
+                    }
+                });
+            });
+
+            selectable.forEach(function (cb) {
+                cb.addEventListener('change', syncSelectAllState);
+            });
+
+            syncSelectAllState();
+        })();
+    </script>
+
+{% endif %}
+>>>>>>> Stashed changes

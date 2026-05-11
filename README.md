@@ -1,13 +1,23 @@
-# plugin roundrobin for GLPI
+# RoundRobin — GLPI plugin
 
-GLPI - Automatic Round Robin Assignment in ticket by selected category
+**RoundRobin** distributes incoming tickets fairly by assigning each new ticket to the next active technician in the **technician group** linked to the ticket’s ITIL category (round-robin). Optionally, the ticket can also be assigned to that group.
 
-This plugin allow to define a round robin policy to assign tickets to a group fo technicians. It permits to distribute the load of job among technicians grouped in single glpi group.
-You just need to fulfill the field "Group in charge of the hardware" of the an ITIL category. Every time a ticket having such a category will be opened, the plugin will check the group and will assign the ticket to one of the member of the group continuing, the next ticket, with the other members.
-The plugin adapt its behavior when the group or the members are changed.
+Configure the technician group per category (**ITIL category** form: technician group field). Enable round-robin per category on the plugin configuration page.
 
-While setting up the plugin you can decide the categories for which the plugin should work and if adding also the same group as assignee (useful to allow other technicians to manage the queue in case of absence for example).
+## GLPI 11
 
+Current release targets **GLPI 11.0.x** and **PHP 8.1+**.
+
+- Assignment uses GLPI 11 **`_actors`** on ticket creation (`pre_item_add`).
+- Configuration UI uses **Twig** templates (`templates/config.form.twig`, `@roundrobin` namespace).
+- **Setup → RoundRobin** opens the configuration page (also available via **Setup → Plugins** → wrench **Configure**).
+- Rotation is tracked **per group** so categories sharing one group share one fair rotation sequence.
+
+Translations are shipped under `locales/` (`en_GB`, `en_US`, `fr_FR`, `de_DE`, `it_IT`, `pl_PL`; see `roundrobin.pot`).
+
+See **INSTALLATION_GUIDE.md** for step-by-step install and behaviour notes (including reinstall with preserved DB tables).
+
+<<<<<<< Updated upstream
 ## GLPI 11 Compatibility
 
 Version 2.0.0 adds support for GLPI 11.x:
@@ -17,3 +27,5 @@ Version 2.0.0 adds support for GLPI 11.x:
 - Uses Twig templates for configuration form
 
 enjoy!
+=======
+>>>>>>> Stashed changes

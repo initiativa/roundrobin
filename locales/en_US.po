@@ -1,22 +1,17 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# RoundRobin plugin for GLPI — American English
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: RoundRobin\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-30 01:37+0000\n"
-"PO-Revision-Date: 2025-03-05 19:46+0100\n"
+"POT-Creation-Date: 2026-05-09 12:00+0000\n"
+"PO-Revision-Date: 2026-05-09 12:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: pl_PL\n"
+"Language: en_US\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.5\n"
 
 msgid "RoundRobin Settings"
 msgstr "RoundRobin Settings"
@@ -56,3 +51,81 @@ msgstr "Save"
 
 msgid "Cancel"
 msgstr "Cancel"
+
+msgid "New tickets pick the next technician from the category technician group."
+msgstr "New tickets pick the next technician from the category technician group."
+
+msgid "RoundRobin"
+msgstr "RoundRobin"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "Group assignment behaviour"
+msgstr "Group assignment behavior"
+
+msgid "Assign the rotated technician plus the technician group linked to the category when checked."
+msgstr "Assign the rotated technician plus the technician group linked to the category when checked."
+
+msgid "Categories & technician groups"
+msgstr "Categories & technician groups"
+
+msgid "Search…"
+msgstr "Search…"
+
+msgid "No ITIL categories found."
+msgstr "No ITIL categories found."
+
+msgid "Assign a technician group on the ITIL category first."
+msgstr "Assign a technician group on the ITIL category first."
+
+msgid "General options"
+msgstr "General options"
+
+msgid "Also assign tickets to this category's technician group"
+msgstr "Also assign tickets to this category's technician group"
+
+msgid "ITIL categories"
+msgstr "ITIL categories"
+
+msgid "Round-robin is available only when a technician group is set on the category."
+msgstr "Round-robin is available only when a technician group is set on the category."
+
+msgid "ITIL category"
+msgstr "ITIL category"
+
+msgid "Technician group"
+msgstr "Technician group"
+
+msgid "Active members"
+msgstr "Active members"
+
+msgid "No technician group assigned"
+msgstr "No technician group assigned"
+
+msgid "Enable"
+msgstr "Enable"
+
+msgid "Assign a technician group to the ITIL category first."
+msgstr "Assign a technician group to the ITIL category first."
+
+msgid "No changes were made."
+msgstr "No changes were made."
+
+msgid "Configuration saved."
+msgstr "Configuration saved."
+
+msgid "Category settings saved."
+msgstr "Category settings saved."
+
+msgid "Assign a technician group to the ITIL category first, then enable round-robin here."
+msgstr "Assign a technician group to the ITIL category first, then enable round-robin here."
+
+msgid "Settings"
+msgstr "Settings"
+
+msgid "No group assigned"
+msgstr "No group assigned"
+
+msgid "Select all"
+msgstr "Select all"

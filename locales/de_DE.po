@@ -56,3 +56,81 @@ msgstr "Speichern"
 
 msgid "Cancel"
 msgstr "Abbrechen"
+
+msgid "New tickets pick the next technician from the category technician group."
+msgstr "Neue Tickets weisen den nächsten Techniker aus der Technikergruppe der Kategorie zu."
+
+msgid "RoundRobin"
+msgstr "RoundRobin"
+
+msgid "N/A"
+msgstr "k. A."
+
+msgid "Group assignment behaviour"
+msgstr "Gruppenzuweisungsverhalten"
+
+msgid "Assign the rotated technician plus the technician group linked to the category when checked."
+msgstr "Wenn aktiviert, wird zusätzlich zum rotierend zugewiesenen Techniker die mit der Kategorie verknüpfte Technikergruppe zugewiesen."
+
+msgid "Categories & technician groups"
+msgstr "Kategorien und Technikergruppen"
+
+msgid "Search…"
+msgstr "Suchen…"
+
+msgid "No ITIL categories found."
+msgstr "Keine ITIL-Kategorien gefunden."
+
+msgid "Assign a technician group on the ITIL category first."
+msgstr "Weisen Sie der ITIL-Kategorie zuerst eine Technikergruppe zu."
+
+msgid "General options"
+msgstr "Allgemeine Optionen"
+
+msgid "Also assign tickets to this category's technician group"
+msgstr "Tickets auch der Technikergruppe dieser Kategorie zuweisen"
+
+msgid "ITIL categories"
+msgstr "ITIL-Kategorien"
+
+msgid "Round-robin is available only when a technician group is set on the category."
+msgstr "Round-Robin ist nur verfügbar, wenn der Kategorie eine Technikergruppe zugewiesen ist."
+
+msgid "ITIL category"
+msgstr "ITIL-Kategorie"
+
+msgid "Technician group"
+msgstr "Technikergruppe"
+
+msgid "Active members"
+msgstr "Aktive Mitglieder"
+
+msgid "No technician group assigned"
+msgstr "Keine Technikergruppe zugewiesen"
+
+msgid "Enable"
+msgstr "Aktivieren"
+
+msgid "Assign a technician group to the ITIL category first."
+msgstr "Weisen Sie der ITIL-Kategorie zuerst eine Technikergruppe zu."
+
+msgid "No changes were made."
+msgstr "Es wurden keine Änderungen vorgenommen."
+
+msgid "Configuration saved."
+msgstr "Konfiguration gespeichert."
+
+msgid "Category settings saved."
+msgstr "Kategorieeinstellungen gespeichert."
+
+msgid "Assign a technician group to the ITIL category first, then enable round-robin here."
+msgstr "Weisen Sie der ITIL-Kategorie zuerst eine Technikergruppe zu, und aktivieren Sie hier anschließend Round-Robin."
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "No group assigned"
+msgstr "Keine Gruppe zugewiesen"
+
+msgid "Select all"
+msgstr "Alle auswählen"
