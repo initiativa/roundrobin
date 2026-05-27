@@ -65,8 +65,8 @@ function plugin_roundrobin_check_prerequisites() {
     /*
      * glpi version check
      */
-    if (version_compare(GLPI_VERSION, PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION, 'le') ||
-            version_compare(GLPI_VERSION, PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION, 'ge')) {
+    if (version_compare(GLPI_VERSION, PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION, 'lt') ||
+            version_compare(GLPI_VERSION, PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION, 'gt')) {
         PluginRoundRobinLogger::addCritical(__FUNCTION__ . ' - plugin prerequisites do not match: ' . PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR);
         if (method_exists('Plugin', 'messageIncompatible')) {
             Plugin::messageIncompatible('core', PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR);

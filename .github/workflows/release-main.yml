@@ -1,4 +1,4 @@
-name: Auto Release
+name: Auto Release (GLPI 11 / main)
 
 on:
   push:
@@ -8,34 +8,47 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout kodu
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Update apt
         run: sudo apt-get update -y
 
-      - name: XML instalation
+      - name: Install XML and gettext tools
         run: sudo apt-get install -y libxml2-utils gettext
 
-      - name: Locale compilation .po do .mo
+      - name: Locale compilation .po to .mo
         run: |
           if [ -d "locales" ]; then
             find locales -type f -name "*.po" -exec bash -c 'msgfmt "$0" -o "${0%.po}.mo"' {} \;
             echo ".po to .mo"
           else
-            echo "Locales folder not existing - ommitting step .po compilation."
+            echo "Locales folder not existing - omitting .po compilation."
           fi
 
-      - name: XML get number
+      - name: Read GLPI 11 release version from roundrobin.xml
         id: get-version
         run: |
-          VERSION=$(xmllint --xpath "string(/root/versions/version/num)" roundrobin.xml)
+          VERSION=$(xmllint --xpath "string(/root/versions/version[compatibility='~11.0'][1]/num)" roundrobin.xml)
+          if [ -z "$VERSION" ]; then
+            echo "No ~11.0 version found in roundrobin.xml"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Found version: $VERSION"
-      
-      - name: prepare tar.gz
+          echo "Found GLPI 11 release version: $VERSION"
+
+      - name: Verify version matches setup.php
+        run: |
+          PHP_VERSION=$(grep -oP "\\\$PLUGIN_ROUNDROBIN_VERSION = '\\K[^']+" inc/config.class.php)
+          XML_VERSION="${{ steps.get-version.outputs.version }}"
+          if [ "$PHP_VERSION" != "$XML_VERSION" ]; then
+            echo "config.class.php version ($PHP_VERSION) != roundrobin.xml ($XML_VERSION)"
+            exit 1
+          fi
+
+      - name: Prepare tar.gz
         run: |
           PLUGIN_NAME="roundrobin"
           mkdir -p /tmp/$PLUGIN_NAME
@@ -44,7 +57,7 @@ jobs:
           cd /tmp
           tar -czvf $PLUGIN_NAME-${{ steps.get-version.outputs.version }}.tar.gz $PLUGIN_NAME
           mv $PLUGIN_NAME-${{ steps.get-version.outputs.version }}.tar.gz $GITHUB_WORKSPACE/
-      
+
       - name: Tag creation
         run: |
           git config --local user.email "action@github.com"
@@ -52,9 +65,8 @@ jobs:
           git tag -a ${{ steps.get-version.outputs.version }} -m "${{ steps.get-version.outputs.version }}"
           git push origin ${{ steps.get-version.outputs.version }}
         continue-on-error: true
-      
+
       - name: Release creation
-        id: create_release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

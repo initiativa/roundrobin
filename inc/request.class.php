@@ -50,23 +50,12 @@ class PluginRoundRobinRequest {
         return $_SESSION['glpiactiveprofile']['id'];
     }
 
+    /**
+     * Legacy stub: per-profile plugin settings were never implemented (no `…_config` table).
+     * Kept for API compatibility; always returns null. Do not query a non-existent table.
+     */
     public static function getCurrentProfileSettings() {
-        global $DB;
-
-        $pluginCode = PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_CODE;
-        $settingTableConfig = "glpi_plugin_" . $pluginCode . "_config";
-        $profileId = self::getUserProfileId();
-        $sql = <<< EOT
-                SELECT c.*
-                FROM $settingTableConfig c JOIN glpi_profiles p ON p.id = c.profile_id
-                WHERE c.profile_id = $profileId;
-EOT;
-        $collection = $DB->queryOrDie($sql, $DB->error());
-        $configArray = iterator_to_array($collection);
-
-        $settingsArray = iterator_to_array($collection);
-        PluginRoundRobinLogger::addDebug(__METHOD__ . " - profile_id: $profileId results: " . var_export($settingsArray, true));
-        return count($settingsArray) === 1 ? $settingsArray[0]['hasTypeAsCategory'] : null;
+        return null;
     }
 
     public static function getUserProfile() {
@@ -94,3 +83,5 @@ EOT;
     }
 
 }
+
+

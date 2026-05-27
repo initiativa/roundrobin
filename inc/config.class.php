@@ -29,23 +29,32 @@
  */
 class PluginRoundRobinConfig {
 
-    public static $PLUGIN_ROUNDROBIN_ENV = 'development';
-    public static $PLUGIN_ROUNDROBIN_NAME = 'Round Robin';
+    /** Set to `development` to enable verbose DEBUG file logs; `production` suppresses them. */
+    public static $PLUGIN_ROUNDROBIN_ENV = 'production';
+    public static $PLUGIN_ROUNDROBIN_NAME = 'RoundRobin';
     public static $PLUGIN_ROUNDROBIN_CODE = 'roundrobin';
-    public static $PLUGIN_ROUNDROBIN_VERSION = '1.0.9';
+    public static $PLUGIN_ROUNDROBIN_VERSION = '2.2.0';
     public static $PLUGIN_ROUNDROBIN_AUTHOR = '<a href="https://www.initiativa.it/glpi.php" target="_blank">initiativa s.r.l.</a>';
     public static $PLUGIN_ROUNDROBIN_LICENSE = 'GPLv3';
     public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://github.com/initiativa/roundrobin/';
-    public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '9.5.5';
-    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "This plugin requires GLPI >= 9.5.5 and GLPI <= 10.0.99";
-    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '10.0.99';
+    public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '11.0.0';
+    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "This plugin requires GLPI >= 11.0.0 and GLPI <= 11.0.99";
+    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '11.0.99';
     public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION_ERROR = 'This plugin requires ';
-    public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '7.3';
+    public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '8.1';
 
     public static function init() {
         PluginRoundRobinLogger::addDebug(__METHOD__ . ' - defining hooks handlers');
+
+        require_once __DIR__ . '/setupmenu.class.php';
+
         global $PLUGIN_HOOKS;
         $PLUGIN_HOOKS['csrf_compliant'][self::$PLUGIN_ROUNDROBIN_CODE] = true;
+
+        /** Setup → submenu (GLPI 11) */
+        $PLUGIN_HOOKS['menu_toadd'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'config' => 'PluginRoundRobinSetupMenu',
+        ];
         /**
          * hooks declarations
          */
@@ -54,17 +63,16 @@ class PluginRoundRobinConfig {
         ];
 
         $PLUGIN_HOOKS['item_add'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-            'Ticket' => 'plugin_roundrobin_hook_item_add_handler',
             'ITILCategory' => 'plugin_roundrobin_hook_itil_item_add_handler',
         ];
 
-        // $PLUGIN_HOOKS['item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-        //     'Ticket' => 'plugin_roundrobin_hook_item_update_handler'
-        // ];
+        $PLUGIN_HOOKS['pre_item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'Ticket' => 'plugin_roundrobin_hook_pre_item_update_handler',
+        ];
 
-        // $PLUGIN_HOOKS['pre_item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
-        //     'Ticket' => 'plugin_roundrobin_hook_item_pre_update_handler'
-        // ];
+        $PLUGIN_HOOKS['item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'ITILCategory' => 'plugin_roundrobin_hook_itil_item_update_handler',
+        ];
 
         // $PLUGIN_HOOKS['pre_item_delete'][self::$PLUGIN_ROUNDROBIN_CODE] = [
         //     'Ticket' => 'plugin_roundrobin_hook_pre_item_delete_handler'
@@ -137,6 +145,11 @@ class PluginRoundRobinConfig {
     public static function getRrOptionsTable() {
         $pluginCode = self::$PLUGIN_ROUNDROBIN_CODE;
         return "glpi_plugin_" . $pluginCode . "_rr_options";
+    }
+
+    public static function getRrGroupsTable() {
+        $pluginCode = self::$PLUGIN_ROUNDROBIN_CODE;
+        return "glpi_plugin_" . $pluginCode . "_rr_groups";
     }
 
 }

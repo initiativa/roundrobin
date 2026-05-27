@@ -1,2 +1,5 @@
-# roundrobin
-GLPI - Automatic Round Robin Assignment in ticket by selected category
+# CSS
+
+This directory contains stylesheets for the RoundRobin plugin.
+
+

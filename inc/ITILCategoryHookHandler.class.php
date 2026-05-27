@@ -27,6 +27,9 @@
  * @link      https://github.com/initiativa/roundrobin
  * -------------------------------------------------------------------------
  */
+
+// Dependencies are loaded by hook.php
+
 class PluginRoundRobinITILCategoryHookHandler extends CommonDBTM implements IPluginRoundRobinHookItemHandler {
 
     public function itemAdded(CommonDBTM $item) {

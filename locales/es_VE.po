@@ -1,0 +1,133 @@
+# RoundRobin plugin for GLPI — Spanish (Venezuela)
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: RoundRobin\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-09 12:00+0000\n"
+"PO-Revision-Date: 2026-05-09 12:00+0000\n"
+"Last-Translator: GLPI Community <community@glpi-project.org>\n"
+"Language-Team: Spanish <es@li.org>\n"
+"Language: es_VE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "RoundRobin Settings"
+msgstr "Configuración de Round Robin"
+
+msgid "Enable Group Round Robin Ticket Assignment for each ITILCategory"
+msgstr "Habilitar asignación Round Robin de tickets por grupo para cada categoría ITIL"
+
+msgid "Assign also to the original Group:"
+msgstr "Asignar también al grupo original:"
+
+msgid "Yes"
+msgstr "Sí"
+
+msgid "No"
+msgstr "No"
+
+msgid "ITILCategory"
+msgstr "Categoría ITIL"
+
+msgid "Group"
+msgstr "Grupo"
+
+msgid "Members #"
+msgstr "Nº de miembros"
+
+msgid "Setting"
+msgstr "Configuración"
+
+msgid "Enabled"
+msgstr "Habilitado"
+
+msgid "Disabled"
+msgstr "Deshabilitado"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "New tickets pick the next technician from the category technician group."
+msgstr "Los nuevos tickets eligen al siguiente técnico del grupo de técnicos de la categoría."
+
+msgid "RoundRobin"
+msgstr "RoundRobin"
+
+msgid "N/A"
+msgstr "N/D"
+
+msgid "Group assignment behaviour"
+msgstr "Comportamiento de asignación al grupo"
+
+msgid "Assign the rotated technician plus the technician group linked to the category when checked."
+msgstr "Si se marca, asigna también el grupo de técnicos vinculado a la categoría además del técnico designado por rotación."
+
+msgid "Categories & technician groups"
+msgstr "Categorías y grupos de técnicos"
+
+msgid "Search…"
+msgstr "Buscar…"
+
+msgid "No ITIL categories found."
+msgstr "No se han encontrado categorías ITIL."
+
+msgid "Assign a technician group on the ITIL category first."
+msgstr "Asigne primero un grupo de técnicos a la categoría ITIL."
+
+msgid "General options"
+msgstr "Opciones generales"
+
+msgid "Also assign tickets to this category's technician group"
+msgstr "Asignar también los tickets al grupo de técnicos de esta categoría"
+
+msgid "ITIL categories"
+msgstr "Categorías ITIL"
+
+msgid "Round-robin is available only when a technician group is set on the category."
+msgstr "El round-robin solo está disponible cuando hay un grupo de técnicos asignado a la categoría."
+
+msgid "ITIL category"
+msgstr "Categoría ITIL"
+
+msgid "Technician group"
+msgstr "Grupo de técnicos"
+
+msgid "Active members"
+msgstr "Miembros activos"
+
+msgid "No technician group assigned"
+msgstr "No hay grupo de técnicos asignado"
+
+msgid "Enable"
+msgstr "Habilitar"
+
+msgid "Assign a technician group to the ITIL category first."
+msgstr "Asigne primero un grupo de técnicos a la categoría ITIL."
+
+msgid "No changes were made."
+msgstr "No se realizaron cambios."
+
+msgid "Configuration saved."
+msgstr "Configuración guardada."
+
+msgid "Category settings saved."
+msgstr "Configuración de las categorías guardada."
+
+msgid "Assign a technician group to the ITIL category first, then enable round-robin here."
+msgstr "Asigne primero un grupo de técnicos a la categoría ITIL y luego habilite round-robin aquí."
+
+msgid "Settings"
+msgstr "Configuración"
+
+msgid "No group assigned"
+msgstr "Sin grupo asignado"
+
+msgid "Select all"
+msgstr "Seleccionar todo"
+

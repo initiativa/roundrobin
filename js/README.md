@@ -1,2 +1,5 @@
-# roundrobin
-GLPI - Automatic Round Robin Assignment in ticket by selected category
+# JavaScript
+
+This directory contains JavaScript files for the RoundRobin plugin.
+
+
