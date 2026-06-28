@@ -134,3 +134,6 @@ msgstr "Nie przypisano grupy"
 
 msgid "Select all"
 msgstr "Zaznacz wszystko"
+
+msgid "Search for category or group"
+msgstr "Szukaj kategorii lub grupy"

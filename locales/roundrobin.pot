@@ -130,3 +130,18 @@ msgstr ""
 
 msgid "Select all"
 msgstr ""
+
+msgid "Search for category or group"
+msgstr ""
+
+msgid "Search categories or groups"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search categories or groups…"
+msgstr ""
+
+msgid "No categories match your search."
+msgstr ""

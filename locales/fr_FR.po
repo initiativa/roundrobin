@@ -134,3 +134,6 @@ msgstr "Aucun groupe assigné"
 
 msgid "Select all"
 msgstr "Tout sélectionner"
+
+msgid "Search for category or group"
+msgstr "Rechercher une catégorie ou un groupe"

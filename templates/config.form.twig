@@ -107,6 +107,10 @@
         border-left: none;
         border-right: none;
     }
+    .plugin-roundrobin-config .rr-category-row.rr-category-row--hidden,
+    .plugin-roundrobin-config .rr-category-row.rr-category-row--paged-out {
+        display: none;
+    }
     /* Item links — follow GLPI/Tabler link tokens (readable vs. pale link utilities) */
     .plugin-roundrobin-config #plugin-rr-category-table tbody td a.rr-item-link {
         color: var(--bs-link-color, var(--tblr-link-color));
@@ -118,16 +122,59 @@
         color: var(--bs-link-hover-color, var(--tblr-link-hover-color));
         text-decoration: underline;
     }
+    .plugin-roundrobin-config .rr-category-intro {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--tblr-border-color, #e2e8f0);
+    }
+    .plugin-roundrobin-config .rr-category-search {
+        width: auto;
+        min-width: 14rem;
+        max-width: 100%;
+    }
+    .plugin-roundrobin-config .rr-category-search .form-control {
+        width: 14rem;
+    }
+    .plugin-roundrobin-config #rr_category_pagination .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        min-height: 2rem;
+        padding: 0.25rem 0.65rem;
+        line-height: 1;
+    }
+    .plugin-roundrobin-config #rr_category_pagination .page-link .ti {
+        margin: 0;
+    }
+    .plugin-roundrobin-config .rr-category-scroll.is-scrollable {
+        max-height: min(60vh, 20rem);
+        overflow: auto;
+    }
+    .plugin-roundrobin-config .rr-category-scroll.is-scrollable #plugin-rr-category-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--tblr-table-head-bg, #f8fafc);
+        box-shadow: inset 0 -1px 0 var(--tblr-border-color, #e2e8f0);
+    }
+    .plugin-roundrobin-config .rr-category-no-results {
+        display: none;
+        padding: 1.25rem 1rem;
+    }
+    .plugin-roundrobin-config .rr-category-no-results.is-visible {
+        display: block;
+    }
 </style>
 
 <header class="plugin-roundrobin-config__page-title mb-4 text-center">
     <h1 class="display-5 fw-bold text-body mb-0">{{ __('RoundRobin', 'roundrobin') }}</h1>
 </header>
 
-{# —— Group assignment behaviour —— #}
-<form method="post" action="">
+<form method="post" action="" class="plugin-roundrobin-config__form">
     {{ csrf_token|raw }}
+    <input type="hidden" name="rr_list_limit" id="rr_list_limit_persist" value="{{ default_list_limit }}"/>
 
+    {# —— Group assignment behaviour —— #}
     <div class="card shadow-sm mb-3 border-0 rounded plugin-roundrobin-config__section-card">
         <div class="plugin-roundrobin-config__section-head">
             <div class="ribbon ribbon-bookmark ribbon-top ribbon-start bg-blue s-1 align-self-start" aria-hidden="true">
@@ -156,16 +203,8 @@
                     </div>
                 </div>
             </div>
-            {% if can_write %}
-                <div class="d-flex justify-content-end mt-4">
-                    <button type="submit" name="save_options" value="1" class="btn btn-primary btn-sm py-2 px-3">
-                        <i class="ti ti-device-floppy me-1" aria-hidden="true"></i>{{ __('Save', 'roundrobin') }}
-                    </button>
-                </div>
-            {% endif %}
         </div>
     </div>
-</form>
 
 {% if centralInterfaceCheck %}
 
@@ -184,10 +223,7 @@
         </div>
     {% endif %}
 
-    <form method="post" action="" class="plugin-roundrobin-history">
-        {{ csrf_token|raw }}
-
-        <div class="card border-0 shadow-sm mb-3" style="overflow: visible;">
+        <div class="card border-0 shadow-sm mb-3 plugin-roundrobin-history" style="overflow: visible;">
             <div class="rr-list-page-head">
                 <div class="ribbon ribbon-bookmark ribbon-top ribbon-start bg-blue s-1 align-self-start" aria-hidden="true">
                     <i class="ti ti-category fa-2x"></i>
@@ -198,13 +234,30 @@
             </div>
 
             <div class="card-body p-0 border-top">
-                <p class="text-muted small px-3 pt-3 mb-0 pb-2">
-                    {{ __('New tickets pick the next technician from the category technician group.', 'roundrobin') }}
-                </p>
                 {% if settings is empty %}
-                    <p class="text-muted p-3 mb-0">{{ __('No ITIL categories found.', 'roundrobin') }}</p>
+                    <p class="text-muted small px-3 pt-3 mb-0 pb-3">
+                        {{ __('New tickets pick the next technician from the category technician group.', 'roundrobin') }}
+                    </p>
+                    <p class="text-muted p-3 mb-0 border-top">{{ __('No ITIL categories found.', 'roundrobin') }}</p>
                 {% else %}
-                    <div class="table-responsive-lg">
+                    {% set no_group_label = __('No technician group assigned', 'roundrobin') %}
+                    <div class="rr-category-intro d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <p class="text-muted small mb-0 flex-grow-1">
+                            {{ __('New tickets pick the next technician from the category technician group.', 'roundrobin') }}
+                        </p>
+                        <div class="rr-category-search input-group input-group-sm flex-shrink-0">
+                            <span class="input-group-text" aria-hidden="true"><i class="ti ti-search"></i></span>
+                            <input type="search"
+                                   class="form-control"
+                                   id="rr_category_search"
+                                   placeholder="{{ __('Search for category or group', 'roundrobin')|e('html_attr') }}"
+                                   aria-label="{{ __('Search for category or group', 'roundrobin')|e('html_attr') }}"
+                                   autocomplete="off"
+                                   inputmode="search"/>
+                        </div>
+                        <p id="rr_category_search_status" class="visually-hidden" aria-live="polite"></p>
+                    </div>
+                    <div id="rr_category_scroll" class="rr-category-scroll table-responsive-lg border-top">
                         <table id="plugin-rr-category-table" class="table table-hover table-striped table-sm align-middle mb-0">
                             {% set has_enableable_rows = false %}
                             {% for row in settings %}{% if row.can_enable_roundrobin %}{% set has_enableable_rows = true %}{% endif %}{% endfor %}
@@ -234,7 +287,12 @@
                             </thead>
                             <tbody>
                             {% for row in settings %}
-                                <tr>
+                                {% set group_search = row.group_name|default('')|trim %}
+                                {% if group_search is empty %}
+                                    {% set group_search = no_group_label %}
+                                {% endif %}
+                                <tr class="rr-category-row"
+                                    data-rr-search="{{ (row.category_name ~ ' ' ~ group_search)|lower|e('html_attr') }}">
                                     <td>
                                         {% if row.category_url %}
                                             <a href="{{ row.category_url|e('html_attr') }}" class="rr-item-link">{{ row.category_name|e }}</a>
@@ -295,24 +353,88 @@
                             </tbody>
                         </table>
                     </div>
+                    <p id="rr_category_no_results" class="rr-category-no-results text-muted small mb-0">
+                        {{ __('No categories match your search.', 'roundrobin') }}
+                    </p>
                 {% endif %}
             </div>
-
-            {% if can_write and settings is not empty %}
-                <div class="card-footer border-top bg-transparent d-flex justify-content-end py-3">
-                    <button type="submit" name="save_assignments" value="1" class="btn btn-primary btn-sm py-2 px-3">
-                        <i class="ti ti-device-floppy me-1" aria-hidden="true"></i>{{ __('Save', 'roundrobin') }}
-                    </button>
+            {% if settings is not empty %}
+                <div id="rr_category_pager"
+                     class="card-footer search-footer d-block"
+                     data-showing="{{ __('Showing %s to %s of %s rows')|e('html_attr') }}"
+                     data-showing-short="{{ __('%s-%s/%s')|e('html_attr') }}"
+                     data-default-limit="{{ default_list_limit }}">
+                    <div class="flex-grow-1 d-flex flex-wrap flex-md-nowrap align-items-center justify-content-between mb-0 search-pager">
+                        <span class="search-limit d-none d-md-block">
+                            <select id="rr_list_limit"
+                                    class="form-select form-select-sm mx-1 d-inline-block w-auto search-limit-dropdown"
+                                    aria-labelledby="rr_list_limit_label">
+                                {% for value in page_limit_options %}
+                                    <option value="{{ value }}"{% if value == default_list_limit %} selected="selected"{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                            <span id="rr_list_limit_label">{{ __('rows / page') }}</span>
+                        </span>
+                        <span class="search-limit d-block d-md-none">
+                            <select id="rr_list_limit_short"
+                                    class="form-select form-select-sm mx-1 d-inline-block w-auto search-limit-dropdown"
+                                    aria-label="{{ __('Rows per page')|e('html_attr') }}">
+                                {% for value in page_limit_options %}
+                                    <option value="{{ value }}"{% if value == default_list_limit %} selected="selected"{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </span>
+                        <p id="rr_page_infos_desktop" class="m-0 text-muted d-none d-md-block page-infos"></p>
+                        <p id="rr_page_infos_mobile" class="m-0 text-muted d-block d-md-none text-nowrap ms-2 page-infos"></p>
+                        <ul id="rr_category_pagination" class="pagination m-0 mt-sm-2 mt-md-0 align-items-center"></ul>
+                    </div>
                 </div>
             {% endif %}
         </div>
-    </form>
 
+{% endif %}
+
+    {% if can_write %}
+        <div class="d-flex justify-content-end mt-2 mb-4">
+            <button type="submit" name="save_config" value="1" class="btn btn-primary py-2 px-4">
+                <i class="ti ti-device-floppy me-1" aria-hidden="true"></i>{{ __('Save', 'roundrobin') }}
+            </button>
+        </div>
+    {% endif %}
+</form>
+
+{% if centralInterfaceCheck %}
     <script>
         (function () {
-            var toggles = Array.prototype.slice.call(document.querySelectorAll('.plugin-roundrobin-config .rr-toggle'));
-            if (!toggles.length) {
+            var root = document.querySelector('.plugin-roundrobin-config');
+            if (!root) {
                 return;
+            }
+
+            var pagerRoot = document.getElementById('rr_category_pager');
+            var searchInput = document.getElementById('rr_category_search');
+            var noResults = document.getElementById('rr_category_no_results');
+            var rows = Array.prototype.slice.call(root.querySelectorAll('.rr-category-row'));
+            var toggles = Array.prototype.slice.call(root.querySelectorAll('.rr-toggle'));
+            var selectAll = document.getElementById('rr_select_all_sw');
+            var limitSelect = document.getElementById('rr_list_limit');
+            var limitSelectShort = document.getElementById('rr_list_limit_short');
+            var limitPersist = document.getElementById('rr_list_limit_persist');
+            var pageInfosDesktop = document.getElementById('rr_page_infos_desktop');
+            var pageInfosMobile = document.getElementById('rr_page_infos_mobile');
+            var pagination = document.getElementById('rr_category_pagination');
+            var scrollWrap = document.getElementById('rr_category_scroll');
+
+            if (!rows.length || !pagerRoot) {
+                return;
+            }
+
+            var showingTemplate = pagerRoot.getAttribute('data-showing') || 'Showing %s to %s of %s rows';
+            var showingShortTemplate = pagerRoot.getAttribute('data-showing-short') || '%s-%s/%s';
+            var currentPage = 1;
+            var pageSize = parseInt(pagerRoot.getAttribute('data-default-limit') || '20', 10);
+            if (!pageSize || pageSize < 1) {
+                pageSize = 20;
             }
 
             function refreshLabel(cb) {
@@ -323,43 +445,270 @@
                 label.textContent = cb.checked ? cb.dataset.rrOn : cb.dataset.rrOff;
             }
 
-            toggles.forEach(function (cb) {
-                cb.addEventListener('change', function () { refreshLabel(cb); });
-                refreshLabel(cb);
-            });
+            function formatTemplate(template, start, end, total) {
+                var values = [start, end, total];
+                var index = 0;
 
-            var selectAll = document.getElementById('rr_select_all_sw');
-            if (!selectAll) {
-                return;
+                return template.replace(/%(\d+\$)?s/g, function () {
+                    var value = values[index];
+                    index += 1;
+                    return value !== undefined ? String(value) : '';
+                });
             }
 
-            var selectable = toggles.filter(function (cb) { return !cb.disabled; });
+            function matchingRows() {
+                return rows.filter(function (row) {
+                    return !row.classList.contains('rr-category-row--hidden');
+                });
+            }
+
+            function visibleToggles() {
+                return toggles.filter(function (cb) {
+                    var row = cb.closest('.rr-category-row');
+                    return row
+                        && !row.classList.contains('rr-category-row--hidden')
+                        && !row.classList.contains('rr-category-row--paged-out')
+                        && !cb.disabled;
+                });
+            }
+
+            function syncLimitSelects(value) {
+                if (limitSelect) {
+                    limitSelect.value = String(value);
+                }
+                if (limitSelectShort) {
+                    limitSelectShort.value = String(value);
+                }
+                if (limitPersist) {
+                    limitPersist.value = String(value);
+                }
+            }
+
+            function updatePageInfos(start, end, total) {
+                var desktopText = formatTemplate(showingTemplate, start, end, total);
+                var mobileText = formatTemplate(showingShortTemplate, start, end, total);
+                if (pageInfosDesktop) {
+                    pageInfosDesktop.textContent = desktopText;
+                }
+                if (pageInfosMobile) {
+                    pageInfosMobile.textContent = mobileText;
+                }
+            }
+
+            function addPageButton(page, label, disabled, active, title) {
+                var li = document.createElement('li');
+                li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'page-link d-flex align-items-center justify-content-center';
+                btn.textContent = label;
+                if (title) {
+                    btn.title = title;
+                }
+                if (!disabled && !active) {
+                    btn.addEventListener('click', function () {
+                        currentPage = page;
+                        applyPagination();
+                    });
+                }
+                if (disabled) {
+                    btn.setAttribute('aria-disabled', 'true');
+                }
+                if (active) {
+                    btn.setAttribute('aria-current', 'page');
+                }
+
+                li.appendChild(btn);
+                pagination.appendChild(li);
+            }
+
+            function addPageIconButton(page, iconClass, disabled, title) {
+                var li = document.createElement('li');
+                li.className = 'page-item' + (disabled ? ' disabled' : '');
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'page-link d-flex align-items-center justify-content-center';
+                btn.title = title;
+                btn.innerHTML = '<i class="' + iconClass + '"></i>';
+                if (!disabled) {
+                    btn.addEventListener('click', function () {
+                        currentPage = page;
+                        applyPagination();
+                    });
+                } else {
+                    btn.setAttribute('aria-disabled', 'true');
+                }
+
+                li.appendChild(btn);
+                pagination.appendChild(li);
+            }
+
+            function renderPaginationControls(totalPages) {
+                if (!pagination) {
+                    return;
+                }
+
+                pagination.innerHTML = '';
+                if (totalPages <= 1) {
+                    return;
+                }
+
+                var adjacents = 2;
+                var skipAdjacents = false;
+
+                addPageIconButton(1, 'ti ti-chevrons-left', currentPage <= 1, 'Start');
+                addPageIconButton(currentPage - 1, 'ti ti-chevron-left', currentPage <= 1, 'Previous');
+
+                for (var page = 1; page <= totalPages; page += 1) {
+                    if (page >= currentPage - adjacents && page <= currentPage + adjacents) {
+                        addPageButton(page, String(page), false, page === currentPage);
+                        skipAdjacents = false;
+                    } else if (!skipAdjacents) {
+                        skipAdjacents = true;
+                        var ellipsis = document.createElement('li');
+                        ellipsis.className = 'page-item disabled';
+                        var span = document.createElement('span');
+                        span.className = 'page-link';
+                        span.textContent = '...';
+                        ellipsis.appendChild(span);
+                        pagination.appendChild(ellipsis);
+                    }
+                }
+
+                addPageIconButton(currentPage + 1, 'ti ti-chevron-right', currentPage >= totalPages, 'Next');
+                addPageIconButton(totalPages, 'ti ti-chevrons-right', currentPage >= totalPages, 'End');
+            }
+
+            function syncScrollState(visibleOnPage) {
+                if (!scrollWrap) {
+                    return;
+                }
+                scrollWrap.classList.toggle('is-scrollable', visibleOnPage > 5);
+            }
+
+            function applyPagination() {
+                var matched = matchingRows();
+                var total = matched.length;
+                var totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+                if (currentPage < 1) {
+                    currentPage = 1;
+                }
+
+                var startIdx = (currentPage - 1) * pageSize;
+                var endIdx = Math.min(startIdx + pageSize, total);
+
+                rows.forEach(function (row) {
+                    row.classList.remove('rr-category-row--paged-out');
+                });
+
+                matched.forEach(function (row, idx) {
+                    if (idx < startIdx || idx >= endIdx) {
+                        row.classList.add('rr-category-row--paged-out');
+                    }
+                });
+
+                var displayStart = total === 0 ? 0 : startIdx + 1;
+                var displayEnd = total === 0 ? 0 : endIdx;
+                var visibleOnPage = total === 0 ? 0 : endIdx - startIdx;
+
+                updatePageInfos(displayStart, displayEnd, total);
+                renderPaginationControls(totalPages);
+                syncScrollState(visibleOnPage);
+                syncSelectAllState();
+
+                if (noResults) {
+                    var hasQuery = searchInput && searchInput.value.trim() !== '';
+                    noResults.classList.toggle('is-visible', hasQuery && total === 0);
+                }
+            }
+
+            function applySearchFilter() {
+                if (!searchInput) {
+                    applyPagination();
+                    return;
+                }
+
+                var query = searchInput.value.trim().toLowerCase();
+
+                rows.forEach(function (row) {
+                    var haystack = row.getAttribute('data-rr-search') || '';
+                    var matches = query === '' || haystack.indexOf(query) !== -1;
+                    row.classList.toggle('rr-category-row--hidden', !matches);
+                });
+
+                currentPage = 1;
+                applyPagination();
+            }
 
             function syncSelectAllState() {
+                if (!selectAll) {
+                    return;
+                }
+
+                var selectable = visibleToggles();
                 if (!selectable.length) {
                     selectAll.checked = false;
                     return;
                 }
+
                 var checkedCount = selectable.filter(function (cb) { return cb.checked; }).length;
-                // Only two states: on when every row is on, off otherwise (no indeterminate — avoids a different track colour).
                 selectAll.checked = checkedCount === selectable.length && checkedCount > 0;
             }
 
-            selectAll.addEventListener('change', function () {
-                var target = selectAll.checked;
-                selectable.forEach(function (cb) {
-                    if (cb.checked !== target) {
-                        cb.checked = target;
-                        refreshLabel(cb);
-                    }
+            function onLimitChange(value) {
+                pageSize = parseInt(value, 10);
+                if (!pageSize || pageSize < 1) {
+                    pageSize = 20;
+                }
+                syncLimitSelects(pageSize);
+                currentPage = 1;
+                applyPagination();
+            }
+
+            toggles.forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    refreshLabel(cb);
+                    syncSelectAllState();
                 });
+                refreshLabel(cb);
             });
 
-            selectable.forEach(function (cb) {
-                cb.addEventListener('change', syncSelectAllState);
-            });
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    var target = selectAll.checked;
+                    visibleToggles().forEach(function (cb) {
+                        if (cb.checked !== target) {
+                            cb.checked = target;
+                            refreshLabel(cb);
+                        }
+                    });
+                });
+            }
 
-            syncSelectAllState();
+            if (searchInput) {
+                searchInput.addEventListener('input', applySearchFilter);
+                searchInput.addEventListener('search', applySearchFilter);
+            }
+
+            if (limitSelect) {
+                limitSelect.addEventListener('change', function () {
+                    onLimitChange(limitSelect.value);
+                });
+            }
+            if (limitSelectShort) {
+                limitSelectShort.addEventListener('change', function () {
+                    onLimitChange(limitSelectShort.value);
+                });
+            }
+
+            syncLimitSelects(pageSize);
+            applySearchFilter();
         })();
     </script>
 

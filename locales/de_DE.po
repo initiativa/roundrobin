@@ -134,3 +134,6 @@ msgstr "Keine Gruppe zugewiesen"
 
 msgid "Select all"
 msgstr "Alle auswählen"
+
+msgid "Search for category or group"
+msgstr "Kategorie oder Gruppe suchen"
