@@ -137,3 +137,15 @@ msgstr "Alle auswählen"
 
 msgid "Search for category or group"
 msgstr "Kategorie oder Gruppe suchen"
+
+msgid "Member filter"
+msgstr "Mitgliederfilter"
+
+msgid "Show all"
+msgstr "Alle anzeigen"
+
+msgid "With active members only"
+msgstr "Nur mit aktiven Mitgliedern"
+
+msgid "Without members"
+msgstr "Ohne Mitglieder"

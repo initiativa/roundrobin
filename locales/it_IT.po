@@ -135,3 +135,15 @@ msgstr "Seleziona tutto"
 
 msgid "Search for category or group"
 msgstr "Cerca categoria o gruppo"
+
+msgid "Member filter"
+msgstr "Filtro membri"
+
+msgid "Show all"
+msgstr "Mostra tutto"
+
+msgid "With active members only"
+msgstr "Solo con membri attivi"
+
+msgid "Without members"
+msgstr "Senza membri"

@@ -81,6 +81,9 @@ class PluginRoundRobinSettings extends CommonDBTM {
             'can_write'             => Session::haveRight('config', UPDATE),
             'default_list_limit'    => self::getDefaultListLimit(),
             'page_limit_options'    => self::getPageLimitOptions(),
+            'persisted_search'      => self::getPersistedSearch(),
+            'persisted_page'        => self::getPersistedPage(),
+            'persisted_member_filter' => self::getPersistedMemberFilter(),
         ]);
     }
 
@@ -102,6 +105,49 @@ class PluginRoundRobinSettings extends CommonDBTM {
         }
 
         $_SESSION['glpi_plugin_roundrobin_list_limit'] = max(5, (int) $_POST['rr_list_limit']);
+    }
+
+    public static function persistUiState(): void {
+        self::persistListLimit();
+
+        if (isset($_POST['rr_category_search_persist'])) {
+            $search = (string) $_POST['rr_category_search_persist'];
+            $_SESSION['glpi_plugin_roundrobin_search'] = function_exists('mb_substr')
+                ? mb_substr($search, 0, 255)
+                : substr($search, 0, 255);
+        }
+
+        if (isset($_POST['rr_current_page'])) {
+            $_SESSION['glpi_plugin_roundrobin_page'] = max(1, (int) $_POST['rr_current_page']);
+        }
+
+        if (isset($_POST['rr_member_filter'])) {
+            $filter = (string) $_POST['rr_member_filter'];
+            if (in_array($filter, self::getMemberFilterOptions(), true)) {
+                $_SESSION['glpi_plugin_roundrobin_member_filter'] = $filter;
+            }
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function getMemberFilterOptions(): array {
+        return ['all', 'with_members', 'without_members'];
+    }
+
+    public static function getPersistedSearch(): string {
+        return (string) ($_SESSION['glpi_plugin_roundrobin_search'] ?? '');
+    }
+
+    public static function getPersistedPage(): int {
+        return max(1, (int) ($_SESSION['glpi_plugin_roundrobin_page'] ?? 1));
+    }
+
+    public static function getPersistedMemberFilter(): string {
+        $filter = (string) ($_SESSION['glpi_plugin_roundrobin_member_filter'] ?? 'all');
+
+        return in_array($filter, self::getMemberFilterOptions(), true) ? $filter : 'all';
     }
 
     /**

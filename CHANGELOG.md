@@ -6,6 +6,7 @@
 - **Configuration save:** Single form with one **Save** button (below both sections) for general options and category toggles; one unified success or no-change message after submit.
 - **Large category lists:** GLPI-style **pagination** (rows / page, row count, page navigation); selected page size is remembered per user session across saves.
 - **Search:** Compact search field on the category table (filter by category or technician group name); placeholder translated in all plugin locales.
+- **Member filter:** Dropdown combined with search **Show all**, **With active members only**, or **Without members**; works together with the search field on the same row.
 - **Usability:** Scrollable category table when more than five rows are visible on the current page; pagination controls aligned like GLPI lists.
 
 ### Requirements

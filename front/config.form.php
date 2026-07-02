@@ -33,7 +33,7 @@ Html::header(
 if (isset($_POST['save_config'])) {
     Session::checkRight('config', UPDATE);
     PluginRoundRobinLogger::addDebug(__FILE__ . ' - SAVE CONFIG: POST ', $_POST);
-    PluginRoundRobinSettings::persistListLimit();
+    PluginRoundRobinSettings::persistUiState();
     PluginRoundRobinSettings::saveConfig();
     Html::back();
 }
