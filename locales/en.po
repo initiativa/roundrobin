@@ -127,3 +127,30 @@ msgstr "No group assigned"
 
 msgid "Select all"
 msgstr "Select all"
+
+msgid "Search for category or group"
+msgstr "Search for category or group"
+
+msgid "Member filter"
+msgstr "Member filter"
+
+msgid "Show all"
+msgstr "Show all"
+
+msgid "With active members only"
+msgstr "With active members only"
+
+msgid "Without members"
+msgstr "Without members"
+
+msgid "Search categories or groups"
+msgstr "Search categories or groups"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Search categories or groups…"
+msgstr "Search categories or groups"
+
+msgid "No categories match your search."
+msgstr "No categories match your search."

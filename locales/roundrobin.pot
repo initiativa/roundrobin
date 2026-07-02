@@ -130,3 +130,30 @@ msgstr ""
 
 msgid "Select all"
 msgstr ""
+
+msgid "Search for category or group"
+msgstr ""
+
+msgid "Member filter"
+msgstr ""
+
+msgid "Show all"
+msgstr ""
+
+msgid "With active members only"
+msgstr ""
+
+msgid "Without members"
+msgstr ""
+
+msgid "Search categories or groups"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search categories or groups…"
+msgstr ""
+
+msgid "No categories match your search."
+msgstr ""

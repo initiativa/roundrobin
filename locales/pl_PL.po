@@ -134,3 +134,18 @@ msgstr "Nie przypisano grupy"
 
 msgid "Select all"
 msgstr "Zaznacz wszystko"
+
+msgid "Search for category or group"
+msgstr "Szukaj kategorii lub grupy"
+
+msgid "Member filter"
+msgstr "Filtr członków"
+
+msgid "Show all"
+msgstr "Pokaż wszystkie"
+
+msgid "With active members only"
+msgstr "Tylko z aktywnymi członkami"
+
+msgid "Without members"
+msgstr "Bez członków"

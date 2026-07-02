@@ -30,17 +30,11 @@ Html::header(
     'pluginroundrobinsetupmenu'
 );
 
-if (isset($_POST['save_options'])) {
+if (isset($_POST['save_config'])) {
     Session::checkRight('config', UPDATE);
-    PluginRoundRobinLogger::addDebug(__FILE__ . ' - SAVE OPTIONS: POST ', $_POST);
-    PluginRoundRobinSettings::saveGeneralOptions();
-    Html::back();
-}
-
-if (isset($_POST['save_assignments'])) {
-    Session::checkRight('config', UPDATE);
-    PluginRoundRobinLogger::addDebug(__FILE__ . ' - SAVE ASSIGNMENTS: POST ', $_POST);
-    PluginRoundRobinSettings::saveCategoryAssignments();
+    PluginRoundRobinLogger::addDebug(__FILE__ . ' - SAVE CONFIG: POST ', $_POST);
+    PluginRoundRobinSettings::persistUiState();
+    PluginRoundRobinSettings::saveConfig();
     Html::back();
 }
 

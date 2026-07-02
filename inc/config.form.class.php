@@ -79,7 +79,112 @@ class PluginRoundRobinSettings extends CommonDBTM {
             'centralInterfaceCheck' => self::checkCentralInterface(),
             'settings'              => self::getSettings(),
             'can_write'             => Session::haveRight('config', UPDATE),
+            'default_list_limit'    => self::getDefaultListLimit(),
+            'page_limit_options'    => self::getPageLimitOptions(),
+            'persisted_search'      => self::getPersistedSearch(),
+            'persisted_page'        => self::getPersistedPage(),
+            'persisted_member_filter' => self::getPersistedMemberFilter(),
         ]);
+    }
+
+    protected static function getDefaultListLimit(): int {
+        if (isset($_SESSION['glpi_plugin_roundrobin_list_limit'])) {
+            return max(5, (int) $_SESSION['glpi_plugin_roundrobin_list_limit']);
+        }
+
+        if (isset($_SESSION['glpilist_limit'])) {
+            return max(5, (int) $_SESSION['glpilist_limit']);
+        }
+
+        return 20;
+    }
+
+    public static function persistListLimit(): void {
+        if (!isset($_POST['rr_list_limit'])) {
+            return;
+        }
+
+        $_SESSION['glpi_plugin_roundrobin_list_limit'] = max(5, (int) $_POST['rr_list_limit']);
+    }
+
+    public static function persistUiState(): void {
+        self::persistListLimit();
+
+        if (isset($_POST['rr_category_search_persist'])) {
+            $search = (string) $_POST['rr_category_search_persist'];
+            $_SESSION['glpi_plugin_roundrobin_search'] = function_exists('mb_substr')
+                ? mb_substr($search, 0, 255)
+                : substr($search, 0, 255);
+        }
+
+        if (isset($_POST['rr_current_page'])) {
+            $_SESSION['glpi_plugin_roundrobin_page'] = max(1, (int) $_POST['rr_current_page']);
+        }
+
+        if (isset($_POST['rr_member_filter'])) {
+            $filter = (string) $_POST['rr_member_filter'];
+            if (in_array($filter, self::getMemberFilterOptions(), true)) {
+                $_SESSION['glpi_plugin_roundrobin_member_filter'] = $filter;
+            }
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function getMemberFilterOptions(): array {
+        return ['all', 'with_members', 'without_members'];
+    }
+
+    public static function getPersistedSearch(): string {
+        return (string) ($_SESSION['glpi_plugin_roundrobin_search'] ?? '');
+    }
+
+    public static function getPersistedPage(): int {
+        return max(1, (int) ($_SESSION['glpi_plugin_roundrobin_page'] ?? 1));
+    }
+
+    public static function getPersistedMemberFilter(): string {
+        $filter = (string) ($_SESSION['glpi_plugin_roundrobin_member_filter'] ?? 'all');
+
+        return in_array($filter, self::getMemberFilterOptions(), true) ? $filter : 'all';
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected static function getPageLimitOptions(): array {
+        $options = [];
+
+        for ($i = 5; $i <= 15; $i += 5) {
+            $options[] = $i;
+        }
+        for ($i = 20; $i <= 40; $i += 10) {
+            $options[] = $i;
+        }
+        for ($i = 50; $i <= 200; $i += 50) {
+            $options[] = $i;
+        }
+        for ($i = 250; $i <= 750; $i += 250) {
+            $options[] = $i;
+        }
+        foreach ([990, 1000, 2000, 3000, 4000, 5000, 10000, 9999999] as $value) {
+            $options[] = $value;
+        }
+
+        $maxInputVars = (int) ini_get('max_input_vars');
+        if ($maxInputVars > 10) {
+            $options[] = $maxInputVars - 10;
+        }
+
+        $default = self::getDefaultListLimit();
+        if (!in_array($default, $options, true)) {
+            $options[] = $default;
+        }
+
+        sort($options, SORT_NUMERIC);
+
+        return array_values(array_unique($options));
     }
 
     protected static function getSettings(): array {
@@ -118,40 +223,31 @@ class PluginRoundRobinSettings extends CommonDBTM {
         return $rrAssignmentsEntity->getOptionAutoAssignGroup();
     }
 
-    /** General options — returns true when at least one field was updated */
-    public static function saveGeneralOptions(): bool {
+    /** @return bool True when auto_assign_group was updated */
+    protected static function applyGeneralOptions(): bool {
         PluginRoundRobinLogger::addDebug(__METHOD__ . ' - POST: ' . print_r($_POST, true));
 
         if (!isset($_POST['auto_assign_group'])) {
             return false;
         }
 
-        $rr = new PluginRoundRobinRRAssignmentsEntity();
+        $rr  = new PluginRoundRobinRRAssignmentsEntity();
         $new = ((int)$_POST['auto_assign_group'] === 1) ? 1 : 0;
         $old = $rr->getOptionAutoAssignGroup();
 
         if ($old === $new) {
-            Session::addMessageAfterRedirect(
-                __('No changes were made.', 'roundrobin'),
-                false,
-                INFO
-            );
             return false;
         }
 
         $rr->updateAutoAssignGroup($new);
 
-        Session::addMessageAfterRedirect(
-            __('Configuration saved.', 'roundrobin'),
-            false,
-            INFO
-        );
-
         return true;
     }
 
-    /** Per-category toggles */
-    public static function saveCategoryAssignments(): bool {
+    /**
+     * @return array{changed: bool, blocked: bool}
+     */
+    protected static function applyCategoryAssignments(): array {
         PluginRoundRobinLogger::addDebug(__METHOD__ . ' - POST: ' . print_r($_POST, true));
 
         $rr             = new PluginRoundRobinRRAssignmentsEntity();
@@ -160,9 +256,9 @@ class PluginRoundRobinSettings extends CommonDBTM {
         $blockedAttempt = false;
 
         foreach ($rows as $row) {
-            $formId       = $row['id'];
+            $formId           = $row['id'];
             $itilCategoriesId = (int)$row['itilcategories_id'];
-            $canEnable       = !empty($row['can_enable_roundrobin']);
+            $canEnable        = !empty($row['can_enable_roundrobin']);
 
             if (!isset($_POST["itilcategories_id_{$formId}"])) {
                 continue;
@@ -193,6 +289,24 @@ class PluginRoundRobinSettings extends CommonDBTM {
             }
         }
 
+        return [
+            'changed' => $changedRows,
+            'blocked' => $blockedAttempt,
+        ];
+    }
+
+    /** General options and category toggles (single form submit). */
+    public static function saveConfig(): void {
+        $generalChanged = self::applyGeneralOptions();
+        $categoryChanged = false;
+        $blockedAttempt  = false;
+
+        if (self::checkCentralInterface()) {
+            $categoryResult  = self::applyCategoryAssignments();
+            $categoryChanged = $categoryResult['changed'];
+            $blockedAttempt  = $categoryResult['blocked'];
+        }
+
         if ($blockedAttempt) {
             Session::addMessageAfterRedirect(
                 __('Assign a technician group to the ITIL category first, then enable round-robin here.', 'roundrobin'),
@@ -201,9 +315,9 @@ class PluginRoundRobinSettings extends CommonDBTM {
             );
         }
 
-        if ($changedRows) {
+        if ($generalChanged || $categoryChanged) {
             Session::addMessageAfterRedirect(
-                __('Category settings saved.', 'roundrobin'),
+                __('Configuration saved.', 'roundrobin'),
                 false,
                 INFO
             );
@@ -214,7 +328,5 @@ class PluginRoundRobinSettings extends CommonDBTM {
                 INFO
             );
         }
-
-        return $changedRows || $blockedAttempt;
     }
 }
