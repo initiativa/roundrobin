@@ -1,5 +1,10 @@
 # Changelog - RoundRobin Plugin
 
+## Unreleased
+
+### Security
+- Validate the GLPI CSRF token before saving RoundRobin configuration changes.
+
 ## [2.3.0] - 2026-06-25
 
 ### Highlights
