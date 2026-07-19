@@ -347,7 +347,7 @@ function plugin_roundrobin_hook_itil_item_update_handler(CommonDBTM $item) {
 }
 
 function plugin_roundrobin_hook_item_pre_update_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - pre update item: " . print_r($item, true));
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - item type: ' . $item->getType() . ' id=' . (int) ($item->fields['id'] ?? 0));
     return $item;
 }
 
@@ -380,7 +380,7 @@ function plugin_roundrobin_hook_ticket_item_update_handler(CommonDBTM $item) {
  * pre item delete
  */
 function plugin_roundrobin_hook_pre_item_delete_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($item, true));
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - item type: ' . $item->getType() . ' id=' . (int) ($item->fields['id'] ?? 0));
     return $item;
 }
 
@@ -388,7 +388,7 @@ function plugin_roundrobin_hook_pre_item_delete_handler(CommonDBTM $item) {
  * item deleted
  */
 function plugin_roundrobin_hook_item_delete_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug( __FUNCTION__ . " - item: " . print_r($item, true));
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - item type: ' . $item->getType() . ' id=' . (int) ($item->fields['id'] ?? 0));
     $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
     if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
         $handler = $HOOK_HANDLERS[$item->getType()];
@@ -401,7 +401,7 @@ function plugin_roundrobin_hook_item_delete_handler(CommonDBTM $item) {
  * item purged
  */
 function plugin_roundrobin_hook_item_purge_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . " - entered with item: " . print_r($item, true));
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - item type: ' . $item->getType() . ' id=' . (int) ($item->fields['id'] ?? 0));
     $HOOK_HANDLERS = plugin_roundrobin_getHookHandlers();
     if (array_key_exists($item->getType(), $HOOK_HANDLERS)) {
         $handler = $HOOK_HANDLERS[$item->getType()];

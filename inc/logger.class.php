@@ -46,9 +46,15 @@ class PluginRoundRobinLogger {
      * @param string $message
      * @param array $details
      */
+    /** Rotate the plugin log when it grows beyond this size (bytes). */
+    protected static $MAX_LOG_SIZE = 10485760; // 10 MB
+
     protected static function add($type, $message, $details = []) {
-        if ($type === self::$DEBUG && class_exists('PluginRoundRobinConfig')
-            && PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_ENV !== 'development') {
+        // Suppress DEBUG unless the environment is explicitly 'development'.
+        // When the config class is not loaded yet, treat it as production.
+        if ($type === self::$DEBUG
+            && (!class_exists('PluginRoundRobinConfig')
+                || PluginRoundRobinConfig::$PLUGIN_ROUNDROBIN_ENV !== 'development')) {
             return;
         }
 
@@ -64,6 +70,8 @@ class PluginRoundRobinLogger {
             return;
         }
         
+        self::rotateIfNeeded('roundrobin');
+
         try {
             switch ($type) {
                 case self::$DEBUG:
@@ -91,6 +99,32 @@ class PluginRoundRobinLogger {
         } catch (Exception $e) {
             // Silently fail if logging fails
         }
+    }
+
+    /**
+     * Keep the plugin log file bounded: when it exceeds the size limit,
+     * move it aside (one .old backup kept) so a fresh file is started.
+     */
+    protected static function rotateIfNeeded($logName) {
+        if (!defined('GLPI_LOG_DIR')) {
+            return;
+        }
+
+        $file = GLPI_LOG_DIR . '/' . $logName . '.log';
+        if (!is_file($file)) {
+            return;
+        }
+
+        $size = @filesize($file);
+        if ($size === false || $size <= self::$MAX_LOG_SIZE) {
+            return;
+        }
+
+        $backup = $file . '.old';
+        if (is_file($backup)) {
+            @unlink($backup);
+        }
+        @rename($file, $backup);
     }
 
     public static function addDebug($message, $details = []) {
