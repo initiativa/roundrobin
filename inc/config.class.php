@@ -33,7 +33,7 @@ class PluginRoundRobinConfig {
     public static $PLUGIN_ROUNDROBIN_ENV = 'production';
     public static $PLUGIN_ROUNDROBIN_NAME = 'RoundRobin';
     public static $PLUGIN_ROUNDROBIN_CODE = 'roundrobin';
-    public static $PLUGIN_ROUNDROBIN_VERSION = '2.3.0';
+    public static $PLUGIN_ROUNDROBIN_VERSION = '2.3.1';
     public static $PLUGIN_ROUNDROBIN_AUTHOR = '<a href="https://www.initiativa.it/glpi.php" target="_blank">initiativa s.r.l.</a>';
     public static $PLUGIN_ROUNDROBIN_LICENSE = 'GPLv3';
     public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://github.com/initiativa/roundrobin/';
@@ -63,6 +63,7 @@ class PluginRoundRobinConfig {
         ];
 
         $PLUGIN_HOOKS['item_add'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'Ticket' => 'plugin_roundrobin_hook_item_add_handler',
             'ITILCategory' => 'plugin_roundrobin_hook_itil_item_add_handler',
         ];
 
@@ -71,6 +72,7 @@ class PluginRoundRobinConfig {
         ];
 
         $PLUGIN_HOOKS['item_update'][self::$PLUGIN_ROUNDROBIN_CODE] = [
+            'Ticket' => 'plugin_roundrobin_hook_ticket_item_update_handler',
             'ITILCategory' => 'plugin_roundrobin_hook_itil_item_update_handler',
         ];
 

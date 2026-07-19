@@ -31,6 +31,11 @@
     <versions>
         <!-- GLPI 11.x (main branch) -->
         <version>
+            <num>2.3.1</num>
+            <compatibility>~11.0</compatibility>
+            <download_url>https://github.com/initiativa/roundrobin/releases/download/2.3.1/roundrobin-2.3.1.tar.gz</download_url>
+        </version>
+        <version>
             <num>2.3.0</num>
             <compatibility>~11.0</compatibility>
             <download_url>https://github.com/initiativa/roundrobin/releases/download/2.3.0/roundrobin-2.3.0.tar.gz</download_url>

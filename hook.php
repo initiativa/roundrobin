@@ -85,6 +85,74 @@ function plugin_roundrobin_merge_rr_into_ticket_input(array $input, array $assig
 }
 
 /**
+ * Assign a round-robin technician directly (actor tables) when the ticket has a
+ * category but no assignee yet. Used for tickets created without the category in
+ * the initial input (e.g. mail receiver + business rules).
+ *
+ * @return bool True when an assignee was applied
+ */
+function plugin_roundrobin_assign_ticket_direct(int $ticketId, int $categoryId): bool {
+    if ($ticketId < 1 || $categoryId < 1) {
+        return false;
+    }
+
+    $ticket = new Ticket();
+    if (!$ticket->getFromDB($ticketId)) {
+        return false;
+    }
+
+    $assignType = CommonITILActor::ASSIGN;
+    if ((int) $ticket->countUsers($assignType) > 0) {
+        PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - skip: ticket #' . $ticketId . ' already has assignee(s)');
+
+        return false;
+    }
+
+    $handler = new PluginRoundRobinTicketHookHandler();
+    $assignmentData = $handler->findUserIdToAssign($categoryId, true);
+    if ($assignmentData === null) {
+        return false;
+    }
+
+    $ticketUser = new Ticket_User();
+    $added = $ticketUser->add([
+        'tickets_id'       => $ticketId,
+        'users_id'         => (int) $assignmentData['user_id'],
+        'type'             => $assignType,
+        'use_notification' => 1,
+    ]);
+    if (!$added) {
+        PluginRoundRobinLogger::addError(__FUNCTION__ . ' - failed to add assignee to ticket #' . $ticketId);
+
+        return false;
+    }
+
+    $gid = $assignmentData['group_id'] ?? null;
+    if ($gid !== null && (int) $gid > 0 && (int) $ticket->countGroups($assignType) === 0) {
+        $groupTicket = new Group_Ticket();
+        $groupTicket->add([
+            'tickets_id' => $ticketId,
+            'groups_id'  => (int) $gid,
+            'type'       => $assignType,
+        ]);
+    }
+
+    // Move the ticket out of "New" if GLPI did not recompute the status itself
+    if ($ticket->getFromDB($ticketId) && (int) $ticket->fields['status'] === Ticket::INCOMING) {
+        $ticket->update([
+            'id'     => $ticketId,
+            'status' => Ticket::ASSIGNED,
+        ]);
+    }
+
+    PluginRoundRobinLogger::addDebug(
+        __FUNCTION__ . ' - assigned user ' . $assignmentData['user_id'] . ' to ticket #' . $ticketId
+    );
+
+    return true;
+}
+
+/**
  * Install hook
  *
  * @return boolean
@@ -174,6 +242,24 @@ function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {
     }
 
     return true;
+}
+
+/**
+ * After ticket creation — covers mail/receiver tickets whose category is applied
+ * by business rules during add (so it was missing from pre_item_add input).
+ */
+function plugin_roundrobin_hook_item_add_handler(CommonDBTM $item) {
+    if ($item->getType() !== 'Ticket') {
+        return $item;
+    }
+
+    $ticketId = (int) ($item->fields['id'] ?? 0);
+    $categoryId = (int) ($item->fields['itilcategories_id'] ?? 0);
+    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - ticket #' . $ticketId . ' category ' . $categoryId);
+
+    plugin_roundrobin_assign_ticket_direct($ticketId, $categoryId);
+
+    return $item;
 }
 
 function plugin_roundrobin_hook_itil_item_add_handler(ITILCategory $category) {
@@ -267,10 +353,25 @@ function plugin_roundrobin_hook_item_pre_update_handler(CommonDBTM $item) {
 
 
 /**
- * Legacy debug stub (not registered). Ticket updates use {@see plugin_roundrobin_hook_pre_item_update_handler}.
+ * After ticket update — fallback when rules set/changed the category during an
+ * update and the pre_item_update `_actors` merge was not applied.
  */
-function plugin_roundrobin_hook_item_update_handler(CommonDBTM $item) {
-    PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - legacy stub, item type: ' . $item->getType());
+function plugin_roundrobin_hook_ticket_item_update_handler(CommonDBTM $item) {
+    if ($item->getType() !== 'Ticket') {
+        return $item;
+    }
+    // Only act when the category actually changed in this update
+    if (!isset($item->oldvalues['itilcategories_id'])) {
+        return $item;
+    }
+
+    $newCat = (int) ($item->fields['itilcategories_id'] ?? 0);
+    if ($newCat < 1) {
+        return $item;
+    }
+
+    $ticketId = (int) ($item->fields['id'] ?? 0);
+    plugin_roundrobin_assign_ticket_direct($ticketId, $newCat);
 
     return $item;
 }

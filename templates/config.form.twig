@@ -484,6 +484,22 @@
                                                 {{ __('Without members', 'roundrobin') }}
                                             </button>
                                         </li>
+                                        <li role="presentation">
+                                            <button type="button"
+                                                    class="dropdown-item rr-custom-select__option"
+                                                    role="option"
+                                                    data-value="enabled">
+                                                {{ __('Show only enabled', 'roundrobin') }}
+                                            </button>
+                                        </li>
+                                        <li role="presentation">
+                                            <button type="button"
+                                                    class="dropdown-item rr-custom-select__option"
+                                                    role="option"
+                                                    data-value="disabled">
+                                                {{ __('Show only disabled', 'roundrobin') }}
+                                            </button>
+                                        </li>
                                     </ul>
                                     <select id="rr_member_filter"
                                             class="visually-hidden"
@@ -492,6 +508,8 @@
                                         <option value="all"{% if persisted_member_filter == 'all' %} selected="selected"{% endif %}>{{ __('Show all', 'roundrobin') }}</option>
                                         <option value="with_members"{% if persisted_member_filter == 'with_members' %} selected="selected"{% endif %}>{{ __('With active members only', 'roundrobin') }}</option>
                                         <option value="without_members"{% if persisted_member_filter == 'without_members' %} selected="selected"{% endif %}>{{ __('Without members', 'roundrobin') }}</option>
+                                        <option value="enabled"{% if persisted_member_filter == 'enabled' %} selected="selected"{% endif %}>{{ __('Show only enabled', 'roundrobin') }}</option>
+                                        <option value="disabled"{% if persisted_member_filter == 'disabled' %} selected="selected"{% endif %}>{{ __('Show only disabled', 'roundrobin') }}</option>
                                     </select>
                                 </div>
                             </div>
@@ -554,7 +572,8 @@
                                 <tr class="rr-category-row"
                                     data-rr-search="{{ (row.category_name ~ ' ' ~ group_search)|lower|e('html_attr') }}"
                                     data-rr-has-group="{{ row.groups_id > 0 ? 1 : 0 }}"
-                                    data-rr-members="{{ row.groups_id > 0 ? row.num_group_members|default(0) : 0 }}">
+                                    data-rr-members="{{ row.groups_id > 0 ? row.num_group_members|default(0) : 0 }}"
+                                    data-rr-active="{{ row.is_active ? 1 : 0 }}">
                                     <td>
                                         {% if row.category_url %}
                                             <a href="{{ row.category_url|e('html_attr') }}" class="rr-item-link">{{ row.category_name|e }}</a>
@@ -760,6 +779,14 @@
 
                 if (memberFilter.value === 'without_members') {
                     return !hasGroup || members === 0;
+                }
+
+                if (memberFilter.value === 'enabled') {
+                    return row.getAttribute('data-rr-active') === '1';
+                }
+
+                if (memberFilter.value === 'disabled') {
+                    return row.getAttribute('data-rr-active') !== '1';
                 }
 
                 return true;
@@ -989,6 +1016,10 @@
             toggles.forEach(function (cb) {
                 cb.addEventListener('change', function () {
                     refreshLabel(cb);
+                    var row = cb.closest('.rr-category-row');
+                    if (row) {
+                        row.setAttribute('data-rr-active', cb.checked ? '1' : '0');
+                    }
                     syncSelectAllState();
                 });
                 refreshLabel(cb);

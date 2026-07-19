@@ -133,7 +133,7 @@ class PluginRoundRobinSettings extends CommonDBTM {
      * @return list<string>
      */
     public static function getMemberFilterOptions(): array {
-        return ['all', 'with_members', 'without_members'];
+        return ['all', 'with_members', 'without_members', 'enabled', 'disabled'];
     }
 
     public static function getPersistedSearch(): string {

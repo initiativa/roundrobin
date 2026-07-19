@@ -1,5 +1,17 @@
 # Changelog - RoundRobin Plugin
 
+## [2.3.1] - 2026-07-19
+
+### Fixes
+- **Email receiver tickets:** Round-robin assignment now also handles tickets created automatically from incoming email.
+- **CSRF compatibility:** Fixed the `GLPI_USE_CSRF_CHECK` error in GLPI 11.
+
+### Added
+- **Category filters:** Added **Show only enabled** and **Show only disabled** options to the configuration filter dropdown.
+
+### Requirements
+- Unchanged: GLPI 11.0.x, PHP ≥ 8.1.
+
 ## [2.3.0] - 2026-06-25
 
 ### Highlights
