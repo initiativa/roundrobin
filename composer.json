@@ -1,0 +1,11 @@
+{
+    "name": "facil-group/glpi-roundrobin",
+    "description": "GLPI RoundRobin plugin (GLPI 10 branch) with the roundrobin_filter_members extension point",
+    "license": "GPL-3.0-or-later",
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}

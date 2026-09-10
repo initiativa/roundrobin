@@ -137,6 +137,10 @@ function plugin_roundrobin_hook_item_add_handler(Ticket $ticket) {
     if ($categoryId !== null) {
         $handler = new PluginRoundRobinTicketHookHandler();
         $userId = $handler->findUserIdToAssign($categoryId);
+        if ($userId === null) {
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - no assignee chosen, skipping');
+            return $ticket;
+        }
 
         $ticket_id = $ticket->fields['id'];
 

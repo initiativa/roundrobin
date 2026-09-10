@@ -28,6 +28,7 @@
  * -------------------------------------------------------------------------
  */
 require_once 'IHookItemHandler.php';
+require_once __DIR__ . '/rotation.class.php';
 
 class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRoundRobinHookItemHandler {
 
@@ -89,42 +90,62 @@ EOT;
     }
 
     protected function assignTicket(CommonDBTM $item) {
-        $itilcategoriesId = $this->getTicketCategory($item);
-        if (($lastAssignmentIndex = $this->getLastAssignmentIndex($item)) === false) {
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
-            return;
+        $itilcategoriesId = (int) $this->getTicketCategory($item);
+        $userId = $this->findUserIdToAssign($itilcategoriesId, true);
+        if ($userId === null) {
+            return null;
         }
-        $categoryGroupMembers = $this->getGroupsUsersByCategory($this->getTicketCategory($item));
-        if (count($categoryGroupMembers) === 0) {
-            /**
-             * category w/o group, or group w/o users
-             */
-            return;
-        }
-        $newAssignmentIndex = isset($lastAssignmentIndex) ? $lastAssignmentIndex + 1 : 0;
-        /**
-         * round robin
-         */
-        if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-            $newAssignmentIndex = $newAssignmentIndex % count($categoryGroupMembers);
-            if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-                $newAssignmentIndex = 0;
-            }
-        }
-        $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
-
-        /**
-         * set the assignment
-         */
-        $ticketId = $this->getTicketId($item);
-        $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
-        $this->setAssignment($ticketId, $userId, $itilcategoriesId);
+        $this->setAssignment($this->getTicketId($item), $userId, $itilcategoriesId);
         return $userId;
     }
 
+    /**
+     * Let other plugins filter the members eligible for assignment.
+     * Hook: $PLUGIN_HOOKS['roundrobin_filter_members'][<plugin>] = callable(array $params): array
+     * $params = ['members' => rows from getGroupsUsersByCategory(), 'itilcategories_id' => int, 'groups_id' => int]
+     *
+     * @return array filtered member rows (same shape as getGroupsUsersByCategory)
+     */
+    public function applyMemberFilters(array $members, int $categoryId, int $groupId): array {
+        global $PLUGIN_HOOKS;
+
+        $params = ['members' => $members, 'itilcategories_id' => $categoryId, 'groups_id' => $groupId];
+        if (!isset($PLUGIN_HOOKS['roundrobin_filter_members']) || !is_array($PLUGIN_HOOKS['roundrobin_filter_members'])) {
+            return $members;
+        }
+        foreach ($PLUGIN_HOOKS['roundrobin_filter_members'] as $pluginKey => $callable) {
+            if (!Plugin::isPluginActive($pluginKey)) {
+                continue;
+            }
+            // The callback usually lives in the plugin's hook.php, which GLPI only includes on demand
+            // (same as Plugin::doHookFunction()). Without this, CLI/cron ticket creation would skip the filter.
+            Plugin::includeHook($pluginKey);
+            if (!is_callable($callable)) {
+                PluginRoundRobinLogger::addWarning(__METHOD__ . ' - filter from plugin ' . $pluginKey . ' is not callable, ignored');
+                continue;
+            }
+            try {
+                $result = call_user_func($callable, $params);
+                if (is_array($result) && isset($result['members']) && is_array($result['members'])) {
+                    $params['members'] = $result['members'];
+                }
+            } catch (\Throwable $e) {
+                PluginRoundRobinLogger::addError(__METHOD__ . ' - filter from plugin ' . $pluginKey . ' failed: ' . $e->getMessage());
+            }
+        }
+        PluginRoundRobinLogger::addDebug(__METHOD__ . ' - eligible members after filters: ' . count($params['members']) . '/' . count($members));
+        return $params['members'];
+    }
+
+    /**
+     * Choose the next technician for a category. The rotation index is kept over the full
+     * member list and ineligible members (see applyMemberFilters) are skipped.
+     *
+     * @return int|null user id, or null when the category is disabled or nobody is eligible
+     */
     public function findUserIdToAssign(int $itilcategoriesId, bool $storeChoice = true) {
         if (($lastAssignmentIndex = $this->getLastAssignmentIndexId($itilcategoriesId)) === false) {
-            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to to (category is disabled or not configured; getLastAssignmentIndex: ' . $lastAssignmentIndex);
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - nothing to do (category is disabled or not configured)');
             return null;
         }
         $categoryGroupMembers = $this->getGroupsUsersByCategory($itilcategoriesId);
@@ -134,23 +155,25 @@ EOT;
              */
             return null;
         }
-        $newAssignmentIndex = isset($lastAssignmentIndex) ? $lastAssignmentIndex + 1 : 0;
-        /**
-         * round robin
-         */
-        if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-            $newAssignmentIndex = $newAssignmentIndex % count($categoryGroupMembers);
-            if ($newAssignmentIndex > (count($categoryGroupMembers) - 1)) {
-                $newAssignmentIndex = 0;
-            }
+
+        $groupId     = (int) ($this->rrAssignmentsEntity->getGroupByItilCategory($itilcategoriesId) ?: 0);
+        $eligible    = $this->applyMemberFilters($categoryGroupMembers, $itilcategoriesId, $groupId);
+        $eligibleIds = array_map(static function (array $m): int {
+            return (int) $m['UserId'];
+        }, $eligible);
+
+        $last = ($lastAssignmentIndex === null || $lastAssignmentIndex === '') ? null : (int) $lastAssignmentIndex;
+        $newAssignmentIndex = PluginRoundRobinRotation::pickNextIndex($last, $categoryGroupMembers, $eligibleIds);
+        if ($newAssignmentIndex === null) {
+            PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - no eligible member for category ' . $itilcategoriesId . ', ticket left unassigned');
+            return null;
         }
 
         if ($storeChoice) {
             $this->rrAssignmentsEntity->updateLastAssignmentIndex($itilcategoriesId, $newAssignmentIndex);
         }
 
-        $userId = $categoryGroupMembers[$newAssignmentIndex]['UserId'];
-        return $userId;
+        return (int) $categoryGroupMembers[$newAssignmentIndex]['UserId'];
     }
 
     protected function getLastAssignmentIndexId(int $categoryId) {
