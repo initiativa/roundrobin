@@ -61,10 +61,7 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             if (!$this->DB->tableExists($table)) {
                 continue;
             }
-            $this->DB->doQueryOrDie(
-                "DROP TABLE `$table`",
-                "Error dropping table $table on uninstall"
-            );
+            $this->DB->doQuery("DROP TABLE `$table`");
             PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - dropped ' . $table);
         }
     }
@@ -84,7 +81,7 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
         PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - entered...');
 
         /**
-         * create setting table - GLPI 11 compatible
+         * create setting table - GLPI 12 compatible
          */
         if (!$this->DB->tableExists($this->rrAssignmentTable)) {
             $query = "CREATE TABLE IF NOT EXISTS `{$this->rrAssignmentTable}` (
@@ -97,11 +94,11 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
             
             PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlCreate: ' . $query);
-            $this->DB->doQueryOrDie($query, "Error creating {$this->rrAssignmentTable}");
+            $this->DB->doQuery($query);
         }
 
         /**
-         * create option table - GLPI 11 compatible
+         * create option table - GLPI 12 compatible
          */
         if (!$this->DB->tableExists($this->rrOptionsTable)) {
             $query = "CREATE TABLE IF NOT EXISTS `{$this->rrOptionsTable}` (
@@ -111,11 +108,11 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
             
             PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlCreate: ' . $query);
-            $this->DB->doQueryOrDie($query, "Error creating {$this->rrOptionsTable}");
+            $this->DB->doQuery($query);
         }
 
         /**
-         * create group rotation table - GLPI 11 compatible
+         * create group rotation table - GLPI 12 compatible
          * Stores one rotation index per group, shared across categories.
          */
         if (!$this->DB->tableExists($this->rrGroupsTable)) {
@@ -128,7 +125,7 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
 
             PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - sqlCreate: ' . $query);
-            $this->DB->doQueryOrDie($query, "Error creating {$this->rrGroupsTable}");
+            $this->DB->doQuery($query);
         }
     }
 
@@ -155,7 +152,7 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
         // Keep existing configuration for valid categories untouched.
         $sql = "DELETE FROM `{$this->rrAssignmentTable}`
                 WHERE `itilcategories_id` NOT IN (SELECT `id` FROM `glpi_itilcategories`)";
-        $this->DB->doQueryOrDie($sql, "Error syncing {$this->rrAssignmentTable} (remove orphaned categories)");
+        $this->DB->doQuery($sql);
     }
 
     public function insertItilCategory($itilCategory) {
@@ -326,7 +323,7 @@ class PluginRoundRobinRRAssignmentsEntity extends CommonDBTM {
         $sql = "INSERT INTO `{$this->rrGroupsTable}` (`groups_id`, `last_assignment_index`)
                 VALUES ($gid, $idx)
                 ON DUPLICATE KEY UPDATE `last_assignment_index` = VALUES(`last_assignment_index`)";
-        $this->DB->doQueryOrDie($sql, "Error saving group rotation index for group $gid");
+        $this->DB->doQuery($sql);
 
         PluginRoundRobinLogger::addDebug(__FUNCTION__ . ' - updated last_assignment_index: ' . $idx . ' for group: ' . $gid);
     }

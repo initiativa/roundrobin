@@ -20,13 +20,10 @@ class PluginRoundRobinSetupMenu extends CommonGLPI {
             return false;
         }
 
-        $plug = Plugin::getWebDir('roundrobin', false);
-        $page = '/' . trim((string)$plug, '/') . '/front/config.form.php';
-        $page = preg_replace('#/+#', '/', $page);
-
+        // GLPI 12: plugin URLs must use the /plugins/ path (Plugin::getWebDir removed).
         return [
             'title' => __('RoundRobin', 'roundrobin'),
-            'page'  => $page,
+            'page'  => '/plugins/roundrobin/front/config.form.php',
             'icon'  => self::getIcon(),
         ];
     }

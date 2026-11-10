@@ -49,7 +49,7 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
         }
         PluginRoundRobinLogger::addDebug(__METHOD__ . " - TicketId: " . $this->getTicketId($item));
         PluginRoundRobinLogger::addDebug(__METHOD__ . " - CategoryId: " . $this->getTicketCategory($item));
-        // In GLPI 11, assignment is done via _actors in pre_item_add hook
+        // Assignment is done via _actors in pre_item_add hook
         // This method is kept for compatibility but assignment already happened
     }
 
@@ -62,7 +62,7 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
     }
 
     /**
-     * Get group members for a category - GLPI 11 compatible using DB->request()
+     * Get group members for a category using DB->request()
      */
     public function getGroupsUsersByCategory($categoryId) {
         // Get category group
@@ -131,7 +131,7 @@ class PluginRoundRobinTicketHookHandler extends CommonDBTM implements IPluginRou
 
     /**
      * Find user to assign for a category - returns array with user_id and optionally group_id
-     * GLPI 11 compatible - returns data for _actors array
+     * Returns data for the ticket `_actors` array
      * 
      * @param int $itilcategoriesId
      * @param bool $storeChoice Whether to update the last assignment index

@@ -74,7 +74,6 @@ class PluginRoundRobinSettings extends CommonDBTM {
         $twig = TemplateRenderer::getInstance();
 
         $twig->display('@roundrobin/config.form.twig', [
-            'csrf_token'            => Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken()]),
             'auto_assign_group'     => self::getAutoAssignGoup(),
             'centralInterfaceCheck' => self::checkCentralInterface(),
             'settings'              => self::getSettings(),
@@ -266,7 +265,7 @@ class PluginRoundRobinSettings extends CommonDBTM {
 
             $postedItilCat = (int)$_POST["itilcategories_id_{$formId}"];
             if ($postedItilCat !== $itilCategoriesId) {
-                PluginRoundRobinLogger::addWarning(__METHOD__ . " CSRF/itil mismatch for row $formId");
+                PluginRoundRobinLogger::addWarning(__METHOD__ . " itil mismatch for row $formId");
                 continue;
             }
 

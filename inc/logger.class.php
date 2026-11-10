@@ -39,7 +39,7 @@ class PluginRoundRobinLogger {
     protected static $EMERGENCY = 600;
 
     /**
-     * GLPI 11 compatible logging
+     * GLPI compatible logging
      * Uses Toolbox::logInFile when available
      * 
      * @param int $type

@@ -33,15 +33,15 @@ class PluginRoundRobinConfig {
     public static $PLUGIN_ROUNDROBIN_ENV = 'production';
     public static $PLUGIN_ROUNDROBIN_NAME = 'RoundRobin';
     public static $PLUGIN_ROUNDROBIN_CODE = 'roundrobin';
-    public static $PLUGIN_ROUNDROBIN_VERSION = '2.3.1';
+    public static $PLUGIN_ROUNDROBIN_VERSION = '3.0.0';
     public static $PLUGIN_ROUNDROBIN_AUTHOR = '<a href="https://www.initiativa.it/glpi.php" target="_blank">initiativa s.r.l.</a>';
     public static $PLUGIN_ROUNDROBIN_LICENSE = 'GPLv3';
     public static $PLUGIN_ROUNDROBIN_HOME_PAGE = 'https://github.com/initiativa/roundrobin/';
-    public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '11.0.0';
-    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "This plugin requires GLPI >= 11.0.0 and GLPI <= 11.0.99";
-    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '11.0.99';
+    public static $PLUGIN_ROUNDROBIN_MIN_GLPI_VERSION = '12.0.0';
+    public static $PLUGIN_ROUNDROBIN_GLPI_VERSION_ERROR = "This plugin requires GLPI >= 12.0.0 and GLPI <= 12.0.99";
+    public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION = '12.0.99';
     public static $PLUGIN_ROUNDROBIN_MAX_GLPI_VERSION_ERROR = 'This plugin requires ';
-    public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '8.1';
+    public static $PLUGIN_ROUNDROBIN_MIN_PHP_VERSION = '8.3';
 
     public static function init() {
         PluginRoundRobinLogger::addDebug(__METHOD__ . ' - defining hooks handlers');
@@ -49,9 +49,8 @@ class PluginRoundRobinConfig {
         require_once __DIR__ . '/setupmenu.class.php';
 
         global $PLUGIN_HOOKS;
-        $PLUGIN_HOOKS['csrf_compliant'][self::$PLUGIN_ROUNDROBIN_CODE] = true;
 
-        /** Setup → submenu (GLPI 11) */
+        /** Setup → submenu (GLPI 12) */
         $PLUGIN_HOOKS['menu_toadd'][self::$PLUGIN_ROUNDROBIN_CODE] = [
             'config' => 'PluginRoundRobinSetupMenu',
         ];
