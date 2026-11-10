@@ -23,12 +23,18 @@
     </authors>
   <!--
     Marketplace resolves the newest <version> whose <compatibility> matches the running GLPI.
-    - GLPI 11.x instances: first matching block below (main branch releases, 2.x).
+    - GLPI 12.x instances: first matching block below (GLPI-12 branch releases, 3.x).
+    - GLPI 11.x instances: blocks tagged ~11.0 (main branch releases, 2.x).
     - GLPI 10.x instances: blocks tagged ~10.0 (glpi-10 branch releases, 1.x).
-    Keep both lines in this file on main so the catalog offers the correct download for each GLPI major.
-    On the glpi-10 branch, use roundrobin.glpi-10.xml as roundrobin.xml; merge new 1.x entries here when publishing.
+    Keep all lines in this file so the catalog offers the correct download for each GLPI major.
   -->
     <versions>
+        <!-- GLPI 12.x (GLPI-12 branch) -->
+        <version>
+            <num>3.0.0</num>
+            <compatibility>~12.0</compatibility>
+            <download_url>https://github.com/initiativa/roundrobin/releases/download/3.0.0/roundrobin-3.0.0.tar.gz</download_url>
+        </version>
         <!-- GLPI 11.x (main branch) -->
         <version>
             <num>2.3.1</num>

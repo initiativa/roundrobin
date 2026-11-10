@@ -16,8 +16,8 @@ The RoundRobin plugin automatically assigns tickets to technicians in a fair, ro
 ## ✅ Requirements
 
 Before installing, make sure you have:
-- **GLPI Version:** 11.0.0 to 11.0.99
-- **PHP Version:** 8.1 or higher
+- **GLPI Version:** 12.0.0 to 12.0.99
+- **PHP Version:** 8.3 or higher
 - **Database:** MySQL/MariaDB (already part of GLPI)
 - **User Permissions:** GLPI Administrator access
 
@@ -190,8 +190,8 @@ Let's say you want all laptop issues to be automatically assigned in round-robin
 ### Problem: Plugin won't install
 
 **Check:**
-- GLPI version (must be 11.0.0 to 11.0.99)
-- PHP version (must be 8.1+)
+- GLPI version (must be 12.0.0 to 12.0.99)
+- PHP version (must be 8.3+)
 - Database connection is working
 - File permissions (Linux)
 
@@ -225,7 +225,7 @@ The plugin remembers which technician was assigned last for each category.
 - Only GLPI administrators can configure the plugin
 - The plugin respects all GLPI permission systems
 - All database operations are protected against SQL injection
-- CSRF tokens protect the configuration form
+- Configuration form posts are protected by GLPI’s request validation
 
 ---
 

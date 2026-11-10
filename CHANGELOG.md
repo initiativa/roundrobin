@@ -1,5 +1,17 @@
 # Changelog - RoundRobin Plugin
 
+## [3.0.0] - 2026-11-10
+
+### Highlights
+- **GLPI 12 compatibility:** Plugin requires GLPI 12.0.x and PHP ≥ 8.3.
+- **CSRF:** Removed token-based CSRF fields/helpers (GLPI 12 uses browser-native request validation).
+- **Database API:** Replaced removed `DBmysql::doQueryOrDie()` calls with `DBmysql::doQuery()`.
+- **Plugin URLs:** Setup menu no longer uses removed `Plugin::getWebDir()`; links use `/plugins/roundrobin/...`.
+
+### Requirements
+- GLPI: 12.0.0 to 12.0.99
+- PHP: 8.3+
+
 ## [2.3.1] - 2026-07-19
 
 ### Fixes

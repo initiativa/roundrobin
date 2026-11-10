@@ -48,7 +48,7 @@ function plugin_roundrobin_getHookHandlers() {
 }
 
 /**
- * Merge RoundRobin assignee into Ticket input (GLPI 11 `_actors`).
+ * Merge RoundRobin assignee into Ticket input (GLPI `_actors`).
  *
  * @param array<string,mixed> $input
  * @param array{user_id:int, group_id:int|null} $assignmentData
@@ -221,7 +221,7 @@ function plugin_roundrobin_uninstall() {
  */
 
 /**
- * pre item add - GLPI 11 compatible
+ * pre item add - GLPI 12 compatible
  * Uses _actors array for ticket assignment
  */
 function plugin_roundrobin_hook_pre_item_add_handler(CommonDBTM $item) {

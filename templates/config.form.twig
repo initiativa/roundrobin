@@ -362,7 +362,6 @@
       data-persisted-search="{{ persisted_search|e('html_attr') }}"
       data-persisted-page="{{ persisted_page }}"
       data-persisted-member-filter="{{ persisted_member_filter|e('html_attr') }}">
-    {{ csrf_token|raw }}
     <input type="hidden" name="rr_list_limit" id="rr_list_limit_persist" value="{{ default_list_limit }}"/>
     <input type="hidden" name="rr_category_search_persist" id="rr_category_search_persist" value="{{ persisted_search|e('html_attr') }}"/>
     <input type="hidden" name="rr_current_page" id="rr_current_page_persist" value="{{ persisted_page }}"/>
